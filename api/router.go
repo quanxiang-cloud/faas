@@ -2,6 +2,7 @@ package restful
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/faas/pkg/k8s"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -27,14 +28,14 @@ type Router struct {
 }
 
 // NewRouter 开启路由
-func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, db *gorm.DB) (*Router, error) {
+func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, db *gorm.DB, kc k8s.Client) (*Router, error) {
 	engine, err := newRouter(c)
 	if err != nil {
 		return nil, err
 	}
 
 	v1 := engine.Group("/api/v1/faas")
-	gitAPI := NewGitAPI(ctx, c, db)
+	gitAPI := NewGitAPI(ctx, c, db, kc)
 	g := v1.Group("/git")
 	{
 		g.POST("/create", gitAPI.Create)
@@ -42,7 +43,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 		g.DELETE("/del", gitAPI.Delete)
 		g.GET("/get", gitAPI.Get)
 	}
-	dockerAPI := NewDockerAPI(ctx, c, db)
+	dockerAPI := NewDockerAPI(ctx, c, db, kc)
 	d := v1.Group("/docker")
 	{
 		d.POST("/create", dockerAPI.Create)

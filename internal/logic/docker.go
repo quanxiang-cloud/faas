@@ -64,7 +64,7 @@ type UpdateDockerResponse struct {
 func (g docker) Update(c context.Context, r *UpdateDockerRequest) (*UpdateDockerResponse, error) {
 	data := g.dockerRepo.Get(c, g.db)
 	if data == nil {
-		return nil, error2.New(code.ErrDataNotExist)
+		return nil, error2.New(code.ErrDataExist)
 	}
 	data.Secret = r.Secret
 	data.UserName = r.UserName
@@ -83,7 +83,7 @@ type DeleteDockerResponse struct {
 func (g docker) Delete(c context.Context, r *DeleteDockerRequest) (*DeleteDockerResponse, error) {
 	data := g.dockerRepo.Get(c, g.db)
 	if data == nil {
-		return nil, error2.New(code.ErrDataNotExist)
+		return nil, error2.New(code.ErrDataExist)
 	}
 	return &DeleteDockerResponse{}, g.dockerRepo.Delete(c, g.db, r.ID)
 }

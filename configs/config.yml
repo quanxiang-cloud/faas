@@ -33,3 +33,6 @@ mysql:
   log: true
 
 
+# ------------------------ k8s --------------------
+k8s:
+  namespace: lowcode

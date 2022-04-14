@@ -20,6 +20,12 @@ type Config struct {
 	InternalNet client.Config `yaml:"internalNet"`
 	Log         logger.Config `yaml:"log"`
 	Mysql       mysql.Config  `yaml:"mysql"`
+	K8s         K8s           `yaml:"k8s"`
+}
+
+// K8s k8s
+type K8s struct {
+	NameSpace string `yaml:"namespace"`
 }
 
 // NewConfig new

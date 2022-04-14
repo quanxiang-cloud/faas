@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"github.com/quanxiang-cloud/faas/pkg/k8s"
 	"os"
 	"os/signal"
 	"syscall"
@@ -29,9 +30,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	// 启动路由
+	k8sClient, err := k8s.NewClient(conf.K8s.NameSpace)
+	// start
 	ctx := context.Background()
-	router, err := restful.NewRouter(ctx, conf, log, db)
+	router, err := restful.NewRouter(ctx, conf, log, db, k8sClient)
 	if err != nil {
 		panic(err)
 	}

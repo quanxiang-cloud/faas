@@ -2,6 +2,7 @@ package restful
 
 import (
 	"context"
+	"github.com/quanxiang-cloud/faas/pkg/k8s"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -16,13 +17,15 @@ import (
 
 // Git git api
 type Git struct {
-	git logic.Git
+	git  logic.Git
+	k8sc k8s.Client
 }
 
 // NewGitAPI new
-func NewGitAPI(c context.Context, conf *config.Config, db *gorm.DB) *Git {
+func NewGitAPI(c context.Context, conf *config.Config, db *gorm.DB, kc k8s.Client) *Git {
 	return &Git{
-		git: logic.NewGit(c, db),
+		git:  logic.NewGit(c, db),
+		k8sc: kc,
 	}
 }
 
@@ -34,7 +37,18 @@ func (f *Git) Create(c *gin.Context) {
 		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
 		return
 	}
-	resp.Format(f.git.Create(ginheader.MutateContext(c), r)).Context(c)
+	res, err := f.git.Create(ginheader.MutateContext(c), r)
+	if err != nil {
+		resp.Format(nil, err).Context(c)
+		return
+	}
+	// create git to k8s
+	err = f.k8sc.CreateGitToken(ginheader.MutateContext(c), r.Host, r.Token)
+	if err != nil {
+		resp.Format(res, err).Context(c)
+		return
+	}
+	resp.Format(res, nil).Context(c)
 }
 
 // Update update
