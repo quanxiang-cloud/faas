@@ -119,6 +119,7 @@ func (c *client) CreateDocker(ctx context.Context, host, username, secret string
 }
 
 type Function struct {
+	ID        string
 	Version   string
 	Project   string
 	GroupName string
@@ -142,9 +143,15 @@ type Git struct {
 func (c *client) Build(ctx context.Context, data *Function) error {
 	fn := c.ofn.CoreV1beta1().Functions(c.k8sNamespace)
 	SourceSubPath := "functions/knative/hello-world-go"
+	lable := make(map[string]string)
+	lable["quanxiang.faas/id"] = data.ID
+	lable["quanxiang.faas/group"] = data.GroupName
+	lable["quanxiang.faas/tag"] = data.Version
+	lable["quanxiang.faas/project"] = data.Project
 	function := &v1beta1.Function{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: strings.ToLower(data.GroupName) + "-" + data.Project + "-" + data.Version,
+			Name:   strings.ToLower(data.GroupName) + "-" + data.Project + "-" + data.Version,
+			Labels: lable,
 		},
 		Spec: v1beta1.FunctionSpec{
 			Version: &data.Version,

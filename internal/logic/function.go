@@ -83,10 +83,10 @@ type UpdateFunctionResponse struct {
 type functionStatus int
 
 const (
-	Null functionStatus = iota
-	Building
-	Failed
-	OK
+	StatusNull functionStatus = iota
+	StatusBuilding
+	StatusFailed
+	StatusOK
 )
 
 func (g *function) UpdateStatus(c context.Context, r *UpdateFunctionRequest) (*UpdateFunctionResponse, error) {
@@ -192,7 +192,11 @@ type DelBuildFunctionResponse struct {
 
 func (g *function) DelFunction(c context.Context, r *DelBuildFunctionRequest) (*DelBuildFunctionResponse, error) {
 	fnData := g.functionRepo.Get(c, g.db, r.ID)
-	return nil, g.k8sc.DelFunction(c, &k8s.DelFunction{
-		Name: strings.ToLower(fnData.GroupName) + "-" + fnData.Project + "-" + fnData.Version,
-	})
+	if fnData.Status == int(StatusOK) || fnData.Status == int(StatusFailed) {
+		return nil, g.k8sc.DelFunction(c, &k8s.DelFunction{
+			Name: strings.ToLower(fnData.GroupName) + "-" + fnData.Project + "-" + fnData.Version,
+		})
+	}
+	return nil, nil
+
 }
