@@ -5,11 +5,14 @@ import (
 	"gorm.io/gorm"
 )
 
-type Git struct {
-	ID    string `gorm:"column:id;type:varchar(64);PRIMARY_KEY" json:"id"`
-	Host  string `gorm:"column:host;type:varchar(200);" json:"host"`
-	Token string `gorm:"column:token;type:text;" json:"token"`
-	Name  string `gorm:"column:name;type:varchar(200);" json:"name"`
+type Function struct {
+	ID        string `gorm:"column:id;type:varchar(64);PRIMARY_KEY" json:"id"`
+	GroupName string `gorm:"column:group_name;type:varchar(200);" json:"groupName"`
+	Project   string `gorm:"column:project;type:varchar(200);" json:"project"`
+	Version   string `gorm:"column:version;type:varchar(200);" json:"version"`
+	Language  string `gorm:"column:language;type:varchar(200);" json:"language"`
+	Status    int    `gorm:"column:status;type:varchar(200);" json:"status"`
+	Env       string `gorm:"column:env;type:text;" json:"env"`
 
 	CreatedAt int64  `gorm:"column:created_at;type:bigint; " json:"createdAt,omitempty" `
 	UpdatedAt int64  `gorm:"column:updated_at;type:bigint; " json:"updatedAt,omitempty" `
@@ -21,13 +24,13 @@ type Git struct {
 }
 
 // TableName table name
-func (Git) TableName() string {
-	return "git"
+func (Function) TableName() string {
+	return "function"
 }
 
-type GitRepo interface {
-	Insert(ctx context.Context, tx *gorm.DB, data *Git) error
-	Update(ctx context.Context, tx *gorm.DB, data *Git) error
+type FunctionRepo interface {
+	Insert(ctx context.Context, tx *gorm.DB, data *Function) error
+	Update(ctx context.Context, tx *gorm.DB, data *Function) error
 	Delete(ctx context.Context, tx *gorm.DB, id ...string) error
-	Get(ctx context.Context, db *gorm.DB) *Git
+	Get(ctx context.Context, db *gorm.DB, id string) *Function
 }

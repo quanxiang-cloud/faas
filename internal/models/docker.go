@@ -8,8 +8,9 @@ import (
 type Docker struct {
 	ID       string `gorm:"column:id;type:varchar(64);PRIMARY_KEY" json:"id"`
 	Host     string `gorm:"column:host;type:varchar(200);" json:"host"`
-	UserName string `gorm:"column:name;type:varchar(64);" json:"name"`
+	UserName string `gorm:"column:user_name;type:varchar(64);" json:"user_name"`
 	Secret   string `gorm:"column:secret;type:text;" json:"secret"`
+	Name     string `gorm:"column:name;type:varchar(64);" json:"name"`
 
 	CreatedAt int64  `gorm:"column:created_at;type:bigint; " json:"createdAt,omitempty" `
 	UpdatedAt int64  `gorm:"column:updated_at;type:bigint; " json:"updatedAt,omitempty" `

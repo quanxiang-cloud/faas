@@ -21,10 +21,16 @@ type Config struct {
 	Log         logger.Config `yaml:"log"`
 	Mysql       mysql.Config  `yaml:"mysql"`
 	K8s         K8s           `yaml:"k8s"`
+	Docker      Docker        `yaml:"docker"`
 }
 
 // K8s k8s
 type K8s struct {
+	NameSpace string `yaml:"namespace"`
+}
+
+// Docker docker
+type Docker struct {
 	NameSpace string `yaml:"namespace"`
 }
 

@@ -36,3 +36,6 @@ mysql:
 # ------------------------ k8s --------------------
 k8s:
   namespace: lowcode
+
+docker:
+  namespace: faas

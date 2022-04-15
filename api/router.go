@@ -51,6 +51,14 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 		d.DELETE("/del", dockerAPI.Delete)
 		d.GET("/get", dockerAPI.Get)
 	}
+	fnAPI := NewFunctionAPI(ctx, c, db, kc)
+	f := v1.Group("/func")
+	{
+		f.POST("/create", fnAPI.Create)
+		f.PUT("/update/status", fnAPI.UpdateStatus)
+		f.DELETE("/del", fnAPI.Delete)
+		f.GET("/get", fnAPI.Get)
+	}
 
 	{
 		probe := probe.New(util.LoggerFromContext(ctx))

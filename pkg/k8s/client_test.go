@@ -47,7 +47,6 @@ func TestBuilder(t *testing.T) {
 	ctx = context.WithValue(ctx, "Tenant-Id", "qxcr")
 	function := &Function{
 		Version:   "v204",
-		Host:      "qxcr.xyz/",
 		Project:   "samples",
 		GroupName: "OpenFunction",
 		Git: &Git{
@@ -63,6 +62,22 @@ func TestBuilder(t *testing.T) {
 		ENV:     env,
 	}
 	err = c.Build(ctx, function)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func TestDelFunction(t *testing.T) {
+	c, err := NewClient("faas")
+	if err != nil {
+		panic(err)
+	}
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "Tenant-Id", "qxcr")
+
+	err = c.DelFunction(ctx, &DelFunction{
+		Name: "openfunction-samples-v204",
+	})
 	if err != nil {
 		panic(err)
 	}

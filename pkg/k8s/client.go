@@ -22,12 +22,14 @@ type Client interface {
 	CreateGitToken(ctx context.Context, host, token string) error
 	CreateDocker(ctx context.Context, host, username, secret string) error
 	Build(ctx context.Context, data *Function) error
+	DelFunction(ctx context.Context, data *DelFunction) error
 }
 
 type client struct {
-	client    *kubernetes.Clientset
-	ofn       versioned.Interface
-	namespace string
+	client          *kubernetes.Clientset
+	ofn             versioned.Interface
+	k8sNamespace    string
+	dockerNamespace string
 }
 
 func NewClient(namespace string) (Client, error) {
@@ -35,9 +37,9 @@ func NewClient(namespace string) (Client, error) {
 	clientset := kubernetes.NewForConfigOrDie(config)
 	ofn := versioned.NewForConfigOrDie(config)
 	return &client{
-		client:    clientset,
-		namespace: namespace,
-		ofn:       ofn,
+		client:       clientset,
+		k8sNamespace: namespace,
+		ofn:          ofn,
 	}, nil
 }
 
@@ -45,7 +47,7 @@ const UnexpectedType = "unexpected type"
 const Default = "faas"
 
 func (c *client) CreateGitToken(ctx context.Context, host, token string) error {
-	secret := c.client.CoreV1().Secrets(c.namespace)
+	secret := c.client.CoreV1().Secrets(c.k8sNamespace)
 	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
 	if tenantID == "" || tenantID == UnexpectedType {
 		tenantID = Default
@@ -57,7 +59,7 @@ func (c *client) CreateGitToken(ctx context.Context, host, token string) error {
 		Type: v1.SecretTypeOpaque,
 		ObjectMeta: ctrl.ObjectMeta{
 			Name:      tenantID + "-git",
-			Namespace: c.namespace,
+			Namespace: c.k8sNamespace,
 		},
 		Data: data,
 	}
@@ -70,7 +72,7 @@ func (c *client) CreateGitToken(ctx context.Context, host, token string) error {
 }
 
 func (c *client) CreateDocker(ctx context.Context, host, username, secret string) error {
-	sc := c.client.CoreV1().Secrets(c.namespace)
+	sc := c.client.CoreV1().Secrets(c.k8sNamespace)
 	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
 	if tenantID == "" || tenantID == UnexpectedType {
 		tenantID = Default
@@ -104,7 +106,7 @@ func (c *client) CreateDocker(ctx context.Context, host, username, secret string
 		Type: v1.SecretTypeDockerConfigJson,
 		ObjectMeta: ctrl.ObjectMeta{
 			Name:      tenantID + "-docker",
-			Namespace: c.namespace,
+			Namespace: c.k8sNamespace,
 		},
 		Data: data,
 	}
@@ -118,7 +120,6 @@ func (c *client) CreateDocker(ctx context.Context, host, username, secret string
 
 type Function struct {
 	Version   string
-	Host      string
 	Project   string
 	GroupName string
 	Git       *Git
@@ -139,7 +140,7 @@ type Git struct {
 }
 
 func (c *client) Build(ctx context.Context, data *Function) error {
-	fn := c.ofn.CoreV1beta1().Functions(c.namespace)
+	fn := c.ofn.CoreV1beta1().Functions(c.k8sNamespace)
 	SourceSubPath := "functions/knative/hello-world-go"
 	function := &v1beta1.Function{
 		ObjectMeta: metav1.ObjectMeta{
@@ -173,4 +174,17 @@ func (c *client) Build(ctx context.Context, data *Function) error {
 	fmt.Println(string(marshal))
 	_, err := fn.Create(ctx, function, metav1.CreateOptions{})
 	return err
+}
+
+func GetBuilder(language string) string {
+	return "openfunction/builder-go:latest"
+}
+
+type DelFunction struct {
+	Name string
+}
+
+func (c *client) DelFunction(ctx context.Context, data *DelFunction) error {
+	fn := c.ofn.CoreV1beta1().Functions(c.k8sNamespace)
+	return fn.Delete(ctx, data.Name, metav1.DeleteOptions{})
 }
