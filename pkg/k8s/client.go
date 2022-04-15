@@ -5,29 +5,39 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"github.com/openfunction/apis/core/v1beta1"
+	"github.com/openfunction/pkg/client/clientset/versioned"
 	ginheader "github.com/quanxiang-cloud/cabin/tailormade/header"
+	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"strings"
+	"time"
 )
 
 type Client interface {
 	CreateGitToken(ctx context.Context, host, token string) error
 	CreateDocker(ctx context.Context, host, username, secret string) error
+	Build(ctx context.Context, data *Function) error
 }
 
 type client struct {
 	client    *kubernetes.Clientset
+	ofn       versioned.Interface
 	namespace string
 }
 
 func NewClient(namespace string) (Client, error) {
 	config := ctrl.GetConfigOrDie()
 	clientset := kubernetes.NewForConfigOrDie(config)
+	ofn := versioned.NewForConfigOrDie(config)
 	return &client{
-		clientset,
-		namespace,
+		client:    clientset,
+		namespace: namespace,
+		ofn:       ofn,
 	}, nil
 }
 
@@ -103,5 +113,64 @@ func (c *client) CreateDocker(ctx context.Context, host, username, secret string
 	if err != nil {
 		return err
 	}
+	return err
+}
+
+type Function struct {
+	Version   string
+	Host      string
+	Project   string
+	GroupName string
+	Git       *Git
+	Docker    *Docker
+	Builder   string
+	ENV       map[string]string
+}
+
+type Docker struct {
+	Host      string
+	NameSpace string
+	Name      string
+}
+
+type Git struct {
+	Name string
+	Host string
+}
+
+func (c *client) Build(ctx context.Context, data *Function) error {
+	fn := c.ofn.CoreV1beta1().Functions(c.namespace)
+	SourceSubPath := "functions/knative/hello-world-go"
+	function := &v1beta1.Function{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: strings.ToLower(data.GroupName) + "-" + data.Project + "-" + data.Version,
+		},
+		Spec: v1beta1.FunctionSpec{
+			Version: &data.Version,
+			Image:   data.Docker.Host + data.Docker.NameSpace + strings.ToLower(data.GroupName) + "-" + data.Project + ":" + data.Version,
+			ImageCredentials: &v1.LocalObjectReference{
+				Name: data.Docker.Name,
+			},
+			Build: &v1beta1.BuildImpl{
+				SuccessfulBuildsHistoryLimit: pointer.Int32Ptr(2),
+				FailedBuildsHistoryLimit:     pointer.Int32Ptr(3),
+				Timeout: &metav1.Duration{
+					Duration: 10 * time.Minute,
+				},
+				Builder: &data.Builder,
+				Env:     data.ENV,
+				SrcRepo: &v1beta1.GitRepo{
+					Url:           data.Git.Host + data.GroupName + "/" + data.Project + ".git",
+					SourceSubPath: &SourceSubPath,
+				},
+			},
+		},
+	}
+	marshal, err2 := yaml.Marshal(function)
+	if err2 != nil {
+		panic(err2)
+	}
+	fmt.Println(string(marshal))
+	_, err := fn.Create(ctx, function, metav1.CreateOptions{})
 	return err
 }
