@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/id"
 	"github.com/quanxiang-cloud/cabin/time"
@@ -41,6 +42,7 @@ func NewFunction(c context.Context, db *gorm.DB, conf config.Config, kc k8s.Clie
 		gitRepo:      mysql.NewGitRepo(),
 		dockerRepo:   mysql.NewDockerRepo(),
 		conf:         conf,
+		k8sc:         kc,
 	}
 }
 
@@ -73,11 +75,12 @@ func (g *function) Create(c context.Context, r *CreateFunctionRequest) (*CreateF
 }
 
 type UpdateFunctionRequest struct {
-	ID     string `json:"id"`
-	Status int    `json:"status"`
+	Labels map[string]string `json:"labels"`
+	State  string            `json:"state"`
 }
 type UpdateFunctionResponse struct {
-	ID string `json:"-"`
+	ID     string `json:"-"`
+	Status int    `json:"-"`
 }
 
 type functionStatus int
@@ -87,17 +90,31 @@ const (
 	StatusBuilding
 	StatusFailed
 	StatusOK
+	StatusCancelled
 )
 
+var result = map[string]int{
+	"Building":  int(StatusBuilding),
+	"Succeeded": int(StatusOK),
+	"Failed":    int(StatusFailed),
+	"Cancelled": int(StatusCancelled),
+}
+
 func (g *function) UpdateStatus(c context.Context, r *UpdateFunctionRequest) (*UpdateFunctionResponse, error) {
-	data := g.functionRepo.Get(c, g.db, r.ID)
+	fmt.Println("status=======", r.State)
+	data := g.functionRepo.Get(c, g.db, r.Labels[k8s.FaasID])
 	if data == nil {
 		return nil, error2.New(code.ErrDataNotExist)
 	}
-	data.Status = r.Status
+	if v, ok := result[r.State]; ok && v != 0 {
+		data.Status = v
+	}
 	unix := time.NowUnix()
 	data.UpdatedAt = unix
-	return &UpdateFunctionResponse{}, g.functionRepo.Update(c, g.db, data)
+	return &UpdateFunctionResponse{
+		ID:     data.ID,
+		Status: result[r.State],
+	}, g.functionRepo.Update(c, g.db, data)
 }
 
 type DeleteFunctionRequest struct {
@@ -185,17 +202,22 @@ func (g *function) Build(c context.Context, r *BuildFunctionRequest) (*BuildFunc
 }
 
 type DelBuildFunctionRequest struct {
-	ID string `json:"id"`
+	ID     string `json:"id"`
+	Status int    `json:"-"`
 }
 type DelBuildFunctionResponse struct {
 }
 
 func (g *function) DelFunction(c context.Context, r *DelBuildFunctionRequest) (*DelBuildFunctionResponse, error) {
-	fnData := g.functionRepo.Get(c, g.db, r.ID)
-	if fnData.Status == int(StatusOK) || fnData.Status == int(StatusFailed) {
-		return nil, g.k8sc.DelFunction(c, &k8s.DelFunction{
-			Name: strings.ToLower(fnData.GroupName) + "-" + fnData.Project + "-" + fnData.Version,
-		})
+
+	if r.Status == int(StatusOK) || r.Status == int(StatusFailed) {
+		fnData := g.functionRepo.Get(c, g.db, r.ID)
+		if fnData != nil {
+			return nil, g.k8sc.DelFunction(c, &k8s.DelFunction{
+				Name: strings.ToLower(fnData.GroupName) + "-" + fnData.Project + "-" + fnData.Version,
+			})
+		}
+		return nil, nil
 	}
 	return nil, nil
 

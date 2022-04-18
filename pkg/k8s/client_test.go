@@ -46,7 +46,8 @@ func TestBuilder(t *testing.T) {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, "Tenant-Id", "qxcr")
 	function := &Function{
-		Version:   "v204",
+		ID:        "1",
+		Version:   "v207",
 		Project:   "samples",
 		GroupName: "OpenFunction",
 		Git: &Git{
@@ -76,7 +77,7 @@ func TestDelFunction(t *testing.T) {
 	ctx = context.WithValue(ctx, "Tenant-Id", "qxcr")
 
 	err = c.DelFunction(ctx, &DelFunction{
-		Name: "openfunction-samples-v204",
+		Name: "openfunction-samples-v207",
 	})
 	if err != nil {
 		panic(err)

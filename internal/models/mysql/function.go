@@ -2,7 +2,6 @@ package mysql
 
 import (
 	"context"
-	ginheader "github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/faas/internal/models"
 	"gorm.io/gorm"
 )
@@ -28,12 +27,6 @@ func (g *functionRepo) Delete(ctx context.Context, tx *gorm.DB, id ...string) er
 
 func (g *functionRepo) Get(ctx context.Context, db *gorm.DB, id string) *models.Function {
 	one := models.Function{}
-	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
-	if tenantID == "" {
-		db = db.Where("tenant_id=? or tenant_id is null", tenantID)
-	} else {
-		db = db.Where("tenant_id=?", tenantID)
-	}
 	affected := db.Where("id=?", id).Find(&one).RowsAffected
 	if affected == 1 {
 		return &one

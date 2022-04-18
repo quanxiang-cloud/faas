@@ -46,6 +46,7 @@ func (g docker) Create(c context.Context, r *CreateDockerRequest) (*CreateDocker
 	data.UserName = r.UserName
 	data.Host = r.Host
 	data.Secret = r.Secret
+	data.NameSpace = "faas/"
 	unix := time.NowUnix()
 	data.CreatedAt = unix
 	data.UpdatedAt = unix

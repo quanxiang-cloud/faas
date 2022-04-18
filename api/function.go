@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	error2 "github.com/quanxiang-cloud/cabin/error"
+	"github.com/quanxiang-cloud/cabin/logger"
 	ginheader "github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/cabin/tailormade/resp"
 	"github.com/quanxiang-cloud/faas/internal/logic"
@@ -51,16 +52,19 @@ func (f *Function) UpdateStatus(c *gin.Context) {
 	r := &logic.UpdateFunctionRequest{}
 	err := c.ShouldBind(r)
 	if err != nil {
+		logger.Logger.Error(err)
 		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
 		return
 	}
 	response, err := f.fn.UpdateStatus(ginheader.MutateContext(c), r)
 	if err != nil {
+		logger.Logger.Error(err)
 		resp.Format(nil, err).Context(c)
 		return
 	}
 	_, err = f.fn.DelFunction(c, &logic.DelBuildFunctionRequest{
-		ID: response.ID,
+		ID:     response.ID,
+		Status: response.Status,
 	})
 	if err != nil {
 		resp.Format(nil, err).Context(c)

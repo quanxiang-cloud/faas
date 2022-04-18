@@ -8,7 +8,6 @@ import (
 	"github.com/openfunction/apis/core/v1beta1"
 	"github.com/openfunction/pkg/client/clientset/versioned"
 	ginheader "github.com/quanxiang-cloud/cabin/tailormade/header"
-	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -140,14 +139,24 @@ type Git struct {
 	Host string
 }
 
+const (
+	FaasID       = "quanxiang.faas/id"
+	FaasGroup    = "quanxiang.faas/group"
+	FaasTag      = "quanxiang.faas/tag"
+	FaasProject  = "quanxiang.faas/project"
+	FaasTenantID = "quanxiang.faas/tenantID"
+)
+
 func (c *client) Build(ctx context.Context, data *Function) error {
+	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
 	fn := c.ofn.CoreV1beta1().Functions(c.k8sNamespace)
 	SourceSubPath := "functions/knative/hello-world-go"
 	lable := make(map[string]string)
-	lable["quanxiang.faas/id"] = data.ID
-	lable["quanxiang.faas/group"] = data.GroupName
-	lable["quanxiang.faas/tag"] = data.Version
-	lable["quanxiang.faas/project"] = data.Project
+	lable[FaasID] = data.ID
+	lable[FaasGroup] = data.GroupName
+	lable[FaasTag] = data.Version
+	lable[FaasProject] = data.Project
+	lable[FaasTenantID] = tenantID
 	function := &v1beta1.Function{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   strings.ToLower(data.GroupName) + "-" + data.Project + "-" + data.Version,
@@ -174,11 +183,6 @@ func (c *client) Build(ctx context.Context, data *Function) error {
 			},
 		},
 	}
-	marshal, err2 := yaml.Marshal(function)
-	if err2 != nil {
-		panic(err2)
-	}
-	fmt.Println(string(marshal))
 	_, err := fn.Create(ctx, function, metav1.CreateOptions{})
 	return err
 }
