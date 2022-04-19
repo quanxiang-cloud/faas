@@ -25,7 +25,7 @@ type Function struct {
 
 // TableName table name
 func (Function) TableName() string {
-	return "function"
+	return "functions"
 }
 
 type FunctionRepo interface {

@@ -24,7 +24,7 @@ type Docker struct {
 
 // TableName table name
 func (Docker) TableName() string {
-	return "docker"
+	return "dockers"
 }
 
 type DockerRepo interface {

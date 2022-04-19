@@ -1,9 +1,10 @@
-create table docker
+create table faas.dockers
 (
     id         varchar(64)  not null
         primary key,
     host       varchar(200) null,
     user_name  varchar(64)  null,
+    name_space varchar(64)  null,
     secret     text         null,
     name       varchar(64)  null,
     created_at bigint       null,
@@ -15,7 +16,7 @@ create table docker
     tenant_id  varchar(64)  null
 );
 
-create table function
+create table faas.functions
 (
     id         varchar(64)  not null
         primary key,
@@ -34,7 +35,7 @@ create table function
     tenant_id  varchar(64)  null
 );
 
-create table git
+create table faas.gits
 (
     id         varchar(64)  not null
         primary key,

@@ -22,7 +22,7 @@ type Git struct {
 
 // TableName table name
 func (Git) TableName() string {
-	return "git"
+	return "gits"
 }
 
 type GitRepo interface {
