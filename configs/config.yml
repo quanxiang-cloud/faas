@@ -39,3 +39,13 @@ k8s:
 
 docker:
   namespace: faas
+
+
+# ---------- redis ----------
+redis:
+  addrs:
+    - 192.168.200.18:6379
+    - 192.168.200.19:6379
+    - 192.168.200.20:6379
+  username:
+  password:

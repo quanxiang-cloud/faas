@@ -10,6 +10,7 @@ import (
 
 	"github.com/quanxiang-cloud/cabin/logger"
 	mysql2 "github.com/quanxiang-cloud/cabin/tailormade/db/mysql"
+	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 	restful "github.com/quanxiang-cloud/faas/api"
 	"github.com/quanxiang-cloud/faas/pkg/config"
 )
@@ -25,6 +26,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	client, err := redis2.NewClient(conf.Redis)
+	if err != nil {
+		panic(err)
+	}
 
 	db, err := mysql2.New(conf.Mysql, log)
 	if err != nil {
@@ -33,7 +38,7 @@ func main() {
 	k8sClient, err := k8s.NewClient(conf.K8s.NameSpace)
 	// start
 	ctx := context.Background()
-	router, err := restful.NewRouter(ctx, conf, log, db, k8sClient)
+	router, err := restful.NewRouter(ctx, conf, log, db, k8sClient, client)
 	if err != nil {
 		panic(err)
 	}

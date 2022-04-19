@@ -8,6 +8,7 @@ import (
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/client"
 	"github.com/quanxiang-cloud/cabin/tailormade/db/mysql"
+	"github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 )
 
 // DefaultPath default file path
@@ -22,6 +23,7 @@ type Config struct {
 	Mysql       mysql.Config  `yaml:"mysql"`
 	K8s         K8s           `yaml:"k8s"`
 	Docker      Docker        `yaml:"docker"`
+	Redis       redis.Config  `yaml:"redis"`
 }
 
 // K8s k8s

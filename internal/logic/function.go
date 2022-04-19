@@ -3,7 +3,6 @@ package logic
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/id"
 	"github.com/quanxiang-cloud/cabin/time"
@@ -81,6 +80,7 @@ type UpdateFunctionRequest struct {
 type UpdateFunctionResponse struct {
 	ID     string `json:"-"`
 	Status int    `json:"-"`
+	Topic  string `json:"-"`
 }
 
 type functionStatus int
@@ -101,20 +101,26 @@ var result = map[string]int{
 }
 
 func (g *function) UpdateStatus(c context.Context, r *UpdateFunctionRequest) (*UpdateFunctionResponse, error) {
-	fmt.Println("status=======", r.State)
-	data := g.functionRepo.Get(c, g.db, r.Labels[k8s.FaasID])
-	if data == nil {
-		return nil, error2.New(code.ErrDataNotExist)
+	switch r.Labels[k8s.MODULE_NAME] {
+
+	case k8s.BUILD:
+		data := g.functionRepo.Get(c, g.db, r.Labels[k8s.BUILD_ID])
+		if data == nil {
+			return nil, error2.New(code.ErrDataNotExist)
+		}
+		if v, ok := result[r.State]; ok && v != 0 {
+			data.Status = v
+		}
+		unix := time.NowUnix()
+		data.UpdatedAt = unix
+		return &UpdateFunctionResponse{
+			ID:     data.ID,
+			Status: result[r.State],
+			Topic:  r.Labels[k8s.MODULE_NAME],
+		}, g.functionRepo.Update(c, g.db, data)
 	}
-	if v, ok := result[r.State]; ok && v != 0 {
-		data.Status = v
-	}
-	unix := time.NowUnix()
-	data.UpdatedAt = unix
-	return &UpdateFunctionResponse{
-		ID:     data.ID,
-		Status: result[r.State],
-	}, g.functionRepo.Update(c, g.db, data)
+
+	return nil, nil
 }
 
 type DeleteFunctionRequest struct {

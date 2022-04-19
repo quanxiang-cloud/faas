@@ -140,11 +140,14 @@ type Git struct {
 }
 
 const (
-	FaasID       = "quanxiang.faas/id"
-	FaasGroup    = "quanxiang.faas/group"
-	FaasTag      = "quanxiang.faas/tag"
-	FaasProject  = "quanxiang.faas/project"
-	FaasTenantID = "quanxiang.faas/tenantID"
+	BUILD_ID    = "quanxiang.faas.build/id"
+	GROUP       = "quanxiang.faas/group"
+	PROJECT_TAG = "quanxiang.faas.project/tag"
+	PROJECT     = "quanxiang.faas/project"
+	TENENT_ID   = "quanxiang.faas/tenantID"
+	MODULE_NAME = "quanxiang.faas.module/name"
+
+	BUILD = "build"
 )
 
 func (c *client) Build(ctx context.Context, data *Function) error {
@@ -152,11 +155,12 @@ func (c *client) Build(ctx context.Context, data *Function) error {
 	fn := c.ofn.CoreV1beta1().Functions(c.k8sNamespace)
 	SourceSubPath := "functions/knative/hello-world-go"
 	lable := make(map[string]string)
-	lable[FaasID] = data.ID
-	lable[FaasGroup] = data.GroupName
-	lable[FaasTag] = data.Version
-	lable[FaasProject] = data.Project
-	lable[FaasTenantID] = tenantID
+	lable[BUILD_ID] = data.ID
+	lable[GROUP] = data.GroupName
+	lable[PROJECT_TAG] = data.Version
+	lable[PROJECT] = data.Project
+	lable[TENENT_ID] = tenantID
+	lable[MODULE_NAME] = BUILD
 	function := &v1beta1.Function{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   strings.ToLower(data.GroupName) + "-" + data.Project + "-" + data.Version,

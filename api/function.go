@@ -3,6 +3,7 @@ package restful
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/logger"
 	ginheader "github.com/quanxiang-cloud/cabin/tailormade/header"
@@ -17,12 +18,14 @@ import (
 // Function Function api
 type Function struct {
 	fn logic.Function
+	ps logic.PubSub
 }
 
 // NewFunctionAPI new
-func NewFunctionAPI(c context.Context, conf *config.Config, db *gorm.DB, kc k8s.Client) *Function {
+func NewFunctionAPI(c context.Context, conf *config.Config, db *gorm.DB, kc k8s.Client, rc redis.UniversalClient) *Function {
 	return &Function{
 		fn: logic.NewFunction(c, db, *conf, kc),
+		ps: logic.NewPubSub(c, rc),
 	}
 }
 
@@ -62,9 +65,17 @@ func (f *Function) UpdateStatus(c *gin.Context) {
 		resp.Format(nil, err).Context(c)
 		return
 	}
-	_, err = f.fn.DelFunction(c, &logic.DelBuildFunctionRequest{
+	_, err = f.fn.DelFunction(ginheader.MutateContext(c), &logic.DelBuildFunctionRequest{
 		ID:     response.ID,
 		Status: response.Status,
+	})
+	if err != nil {
+		resp.Format(nil, err).Context(c)
+		return
+	}
+	_, err = f.ps.Publish(ginheader.MutateContext(c), &logic.PublishReq{
+		Topic: response.Topic,
+		Key:   response.ID,
 	})
 	if err != nil {
 		resp.Format(nil, err).Context(c)
