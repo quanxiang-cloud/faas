@@ -3,6 +3,7 @@ package restful
 import (
 	"context"
 	"github.com/go-redis/redis/v8"
+	"github.com/olivere/elastic/v7"
 	"github.com/quanxiang-cloud/faas/pkg/k8s"
 
 	"github.com/gin-gonic/gin"
@@ -29,7 +30,7 @@ type Router struct {
 }
 
 // NewRouter 开启路由
-func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, db *gorm.DB, kc k8s.Client, rc redis.UniversalClient) (*Router, error) {
+func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, db *gorm.DB, kc k8s.Client, rc redis.UniversalClient, es *elastic.Client) (*Router, error) {
 	engine, err := newRouter(c)
 	if err != nil {
 		return nil, err
@@ -52,13 +53,14 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 		d.DELETE("/del", dockerAPI.Delete)
 		d.GET("/get", dockerAPI.Get)
 	}
-	fnAPI := NewFunctionAPI(ctx, c, db, kc, rc)
+	fnAPI := NewFunctionAPI(ctx, c, db, kc, rc, es)
 	f := v1.Group("/fn")
 	{
 		f.POST("/create", fnAPI.Create)
 		f.POST("/update/status", fnAPI.UpdateStatus)
 		f.DELETE("/del", fnAPI.Delete)
 		f.GET("/get", fnAPI.Get)
+		f.GET("/:buildID/logger", fnAPI.ListLog)
 	}
 
 	cm := NewCompoundAPI(ctx, rc)

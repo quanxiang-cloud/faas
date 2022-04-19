@@ -3,16 +3,19 @@ package logic
 import (
 	"context"
 	"encoding/json"
+	"github.com/olivere/elastic/v7"
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/id"
-	"github.com/quanxiang-cloud/cabin/time"
+	time2 "github.com/quanxiang-cloud/cabin/time"
 	"github.com/quanxiang-cloud/faas/internal/models"
+	"github.com/quanxiang-cloud/faas/internal/models/es"
 	"github.com/quanxiang-cloud/faas/internal/models/mysql"
 	"github.com/quanxiang-cloud/faas/pkg/code"
 	"github.com/quanxiang-cloud/faas/pkg/config"
 	"github.com/quanxiang-cloud/faas/pkg/k8s"
 	"gorm.io/gorm"
 	"strings"
+	"time"
 )
 
 type Function interface {
@@ -23,6 +26,7 @@ type Function interface {
 
 	Build(c context.Context, r *BuildFunctionRequest) (*BuildFunctionResponse, error)
 	DelFunction(c context.Context, r *DelBuildFunctionRequest) (*DelBuildFunctionResponse, error)
+	ListLog(c context.Context, r *ListlogRequest) (*ListLogResponse, error)
 }
 
 type function struct {
@@ -32,9 +36,10 @@ type function struct {
 	dockerRepo   models.DockerRepo
 	k8sc         k8s.Client
 	conf         config.Config
+	buildLogRepo models.BuilderLogRepo
 }
 
-func NewFunction(c context.Context, db *gorm.DB, conf config.Config, kc k8s.Client) Function {
+func NewFunction(c context.Context, db *gorm.DB, conf config.Config, kc k8s.Client, esClient *elastic.Client) Function {
 	return &function{
 		db:           db,
 		functionRepo: mysql.NewFunctionRepo(),
@@ -42,6 +47,7 @@ func NewFunction(c context.Context, db *gorm.DB, conf config.Config, kc k8s.Clie
 		dockerRepo:   mysql.NewDockerRepo(),
 		conf:         conf,
 		k8sc:         kc,
+		buildLogRepo: es.NewBuildLogRepo(esClient),
 	}
 }
 
@@ -67,7 +73,7 @@ func (g *function) Create(c context.Context, r *CreateFunctionRequest) (*CreateF
 		marshal, _ := json.Marshal(r.Env)
 		data.Env = string(marshal)
 	}
-	unix := time.NowUnix()
+	unix := time2.NowUnix()
 	data.CreatedAt = unix
 	data.UpdatedAt = unix
 	return &CreateFunctionResponse{}, g.functionRepo.Insert(c, g.db, data)
@@ -111,7 +117,7 @@ func (g *function) UpdateStatus(c context.Context, r *UpdateFunctionRequest) (*U
 		if v, ok := result[r.State]; ok && v != 0 {
 			data.Status = v
 		}
-		unix := time.NowUnix()
+		unix := time2.NowUnix()
 		data.UpdatedAt = unix
 		return &UpdateFunctionResponse{
 			ID:     data.ID,
@@ -227,4 +233,42 @@ func (g *function) DelFunction(c context.Context, r *DelBuildFunctionRequest) (*
 	}
 	return nil, nil
 
+}
+
+type ListlogRequest struct {
+	BuildID   string `json:"buildID" form:"buildID" uri:"buildID"`
+	Index     int    `json:"index" form:"index"`
+	Timestamp int64  `json:"timestamp" form:"timestamp"`
+}
+type ListLogResponse struct {
+	Logs  []*models.LogVO `json:"logs"`
+	Count int64           `json:"count"`
+}
+
+func (g *function) ListLog(c context.Context, r *ListlogRequest) (*ListLogResponse, error) {
+	fn := g.functionRepo.Get(c, g.db, r.BuildID)
+	if fn == nil {
+		return nil, error2.New(code.ErrDataNotExist)
+	}
+
+	t := time.Unix(r.Timestamp, 0)
+	fullLogs, count, err := g.buildLogRepo.Search(c, r.BuildID, t, r.Index, 5)
+	if err != nil {
+		return nil, err
+	}
+
+	logs := make([]*models.LogVO, 0, count)
+	for _, e := range fullLogs {
+		logs = append(logs, &models.LogVO{
+			Run:       e.Labels.PipelineTask,
+			Step:      e.Labels.Task,
+			Log:       e.Log,
+			Timestamp: e.Time.Unix(),
+		})
+	}
+
+	return &ListLogResponse{
+		Logs:  logs,
+		Count: count,
+	}, nil
 }

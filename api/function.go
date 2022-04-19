@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
+	"github.com/olivere/elastic/v7"
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/logger"
 	ginheader "github.com/quanxiang-cloud/cabin/tailormade/header"
@@ -22,9 +23,9 @@ type Function struct {
 }
 
 // NewFunctionAPI new
-func NewFunctionAPI(c context.Context, conf *config.Config, db *gorm.DB, kc k8s.Client, rc redis.UniversalClient) *Function {
+func NewFunctionAPI(c context.Context, conf *config.Config, db *gorm.DB, kc k8s.Client, rc redis.UniversalClient, esClient *elastic.Client) *Function {
 	return &Function{
-		fn: logic.NewFunction(c, db, *conf, kc),
+		fn: logic.NewFunction(c, db, *conf, kc, esClient),
 		ps: logic.NewPubSub(c, rc),
 	}
 }
@@ -104,4 +105,16 @@ func (f *Function) Get(c *gin.Context) {
 		return
 	}
 	resp.Format(f.fn.Get(ginheader.MutateContext(c), r)).Context(c)
+}
+
+func (b *Function) ListLog(c *gin.Context) {
+	ctx := c.Request.Context()
+	req := &logic.ListlogRequest{
+		BuildID: c.Param("buildID"),
+	}
+	if err := c.ShouldBind(req); err != nil {
+		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
+		return
+	}
+	resp.Format(b.fn.ListLog(ctx, req)).Context(c)
 }

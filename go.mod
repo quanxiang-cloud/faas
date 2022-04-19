@@ -28,6 +28,8 @@ replace (
 )
 
 require (
+	git.internal.yunify.com/qxp/misc v0.0.0-20211230072102-f37610800c2f
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/jinzhu/now v1.1.4 // indirect
+	github.com/olivere/elastic/v7 v7.0.30
 )

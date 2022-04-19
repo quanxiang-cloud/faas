@@ -7,6 +7,7 @@ import (
 
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/client"
+	"github.com/quanxiang-cloud/cabin/tailormade/db/elastic"
 	"github.com/quanxiang-cloud/cabin/tailormade/db/mysql"
 	"github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 )
@@ -16,14 +17,15 @@ var DefaultPath = "./configs/config.yml"
 
 // Config config info
 type Config struct {
-	Port        string        `yaml:"port"`
-	Model       string        `yaml:"model"`
-	InternalNet client.Config `yaml:"internalNet"`
-	Log         logger.Config `yaml:"log"`
-	Mysql       mysql.Config  `yaml:"mysql"`
-	K8s         K8s           `yaml:"k8s"`
-	Docker      Docker        `yaml:"docker"`
-	Redis       redis.Config  `yaml:"redis"`
+	Port        string         `yaml:"port"`
+	Model       string         `yaml:"model"`
+	InternalNet client.Config  `yaml:"internalNet"`
+	Log         logger.Config  `yaml:"log"`
+	Mysql       mysql.Config   `yaml:"mysql"`
+	K8s         K8s            `yaml:"k8s"`
+	Docker      Docker         `yaml:"docker"`
+	Redis       redis.Config   `yaml:"redis"`
+	Elastic     elastic.Config `yaml:"elastic"`
 }
 
 // K8s k8s
