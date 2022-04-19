@@ -5,16 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/quanxiang-cloud/faas/internal/models"
+	"github.com/quanxiang-cloud/faas/pkg/k8s"
 	"time"
 
 	"github.com/olivere/elastic/v7"
-)
-
-// es query name
-const (
-	KuberRef      = "kubernetes.labels.faas.module/ref.keyword"
-	KuberPipeline = "kubernetes.labels.tekton.dev/pipelineTask"
-	KuberTask     = "kubernetes.labels.tekton.dev/task"
 )
 
 type builderLogRepo struct {
@@ -38,7 +32,7 @@ func (b *builderLogRepo) Search(ctx context.Context, ID string, time time.Time,
 	boolQuery := make([]elastic.Query, 0, 2)
 	boolQuery = append(
 		boolQuery,
-		elastic.NewTermQuery(KuberRef, ID),
+		elastic.NewTermQuery(k8s.BUILD_ID, ID),
 		elastic.NewRangeQuery("time").Gte(time.UTC()),
 	)
 
