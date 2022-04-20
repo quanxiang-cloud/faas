@@ -140,6 +140,7 @@ type Git struct {
 }
 
 const (
+	RESOURCRREF = "kubernetes.pod_name"
 	BUILD_ID    = "quanxiang.faas.build/id"
 	GROUP       = "quanxiang.faas/group"
 	PROJECT_TAG = "quanxiang.faas.project/tag"
@@ -151,20 +152,24 @@ const (
 )
 
 func (c *client) Build(ctx context.Context, data *Function) error {
-	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
+	//_, tenantID := ginheader.GetTenantID(ctx).Wreck()
 	fn := c.ofn.CoreV1beta1().Functions(c.k8sNamespace)
 	SourceSubPath := "functions/knative/hello-world-go"
-	lable := make(map[string]string)
-	lable[BUILD_ID] = data.ID
-	lable[GROUP] = data.GroupName
-	lable[PROJECT_TAG] = data.Version
-	lable[PROJECT] = data.Project
-	lable[TENENT_ID] = tenantID
-	lable[MODULE_NAME] = BUILD
+	//lable := make(map[string]string)
+	//lable[BUILD_ID] = data.ID
+	//lable[GROUP] = data.GroupName
+	//lable[PROJECT_TAG] = data.Version
+	//lable[PROJECT] = data.Project
+	//lable[TENENT_ID] = tenantID
+	//lable[MODULE_NAME] = BUILD
 	function := &v1beta1.Function{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   strings.ToLower(data.GroupName) + "-" + data.Project + "-" + data.Version,
-			Labels: lable,
+			Name: strings.ToLower(data.GroupName) + "-" + data.Project + "-" + data.Version,
+			//Labels: lable,
+			Annotations: map[string]string{
+				"123":  "123",
+				"faas": "faas",
+			},
 		},
 		Spec: v1beta1.FunctionSpec{
 			Version: &data.Version,

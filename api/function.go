@@ -74,14 +74,14 @@ func (f *Function) UpdateStatus(c *gin.Context) {
 		resp.Format(nil, err).Context(c)
 		return
 	}
-	_, err = f.ps.Publish(ginheader.MutateContext(c), &logic.PublishReq{
-		Topic: response.Topic,
-		Key:   response.ID,
-	})
-	if err != nil {
-		resp.Format(nil, err).Context(c)
-		return
-	}
+	//_, err = f.ps.Publish(ginheader.MutateContext(c), &logic.PublishReq{
+	//	Topic: response.Topic,
+	//	Key:   response.ID,
+	//})
+	//if err != nil {
+	//	resp.Format(nil, err).Context(c)
+	//	return
+	//}
 	resp.Format(response, nil).Context(c)
 }
 
@@ -110,7 +110,7 @@ func (f *Function) Get(c *gin.Context) {
 func (b *Function) ListLog(c *gin.Context) {
 	ctx := c.Request.Context()
 	req := &logic.ListlogRequest{
-		BuildID: c.Param("buildID"),
+		ResourceRef: c.Param("resourceRef"),
 	}
 	if err := c.ShouldBind(req); err != nil {
 		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)

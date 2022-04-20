@@ -60,7 +60,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 		f.POST("/update/status", fnAPI.UpdateStatus)
 		f.DELETE("/del", fnAPI.Delete)
 		f.GET("/get", fnAPI.Get)
-		f.GET("/:buildID/logger", fnAPI.ListLog)
+		f.GET("/:resourceRef/logger", fnAPI.ListLog)
 	}
 
 	cm := NewCompoundAPI(ctx, rc)

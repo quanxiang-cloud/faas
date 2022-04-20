@@ -33,3 +33,12 @@ func (g *functionRepo) Get(ctx context.Context, db *gorm.DB, id string) *models.
 	}
 	return nil
 }
+
+func (g *functionRepo) GetByName(ctx context.Context, db *gorm.DB, name string) *models.Function {
+	one := models.Function{}
+	affected := db.Where("name=?", name).Find(&one).RowsAffected
+	if affected == 1 {
+		return &one
+	}
+	return nil
+}

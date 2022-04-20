@@ -35,7 +35,7 @@ func TestCreatDocker(t *testing.T) {
 }
 
 func TestBuilder(t *testing.T) {
-	c, err := NewClient("faas")
+	c, err := NewClient("builder")
 	if err != nil {
 		panic(err)
 	}
@@ -46,8 +46,8 @@ func TestBuilder(t *testing.T) {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, "Tenant-Id", "qxcr")
 	function := &Function{
-		ID:        "1",
-		Version:   "v207",
+		ID:        "2",
+		Version:   "v220",
 		Project:   "samples",
 		GroupName: "OpenFunction",
 		Git: &Git{
@@ -69,7 +69,7 @@ func TestBuilder(t *testing.T) {
 }
 
 func TestDelFunction(t *testing.T) {
-	c, err := NewClient("faas")
+	c, err := NewClient("builder")
 	if err != nil {
 		panic(err)
 	}
@@ -77,7 +77,7 @@ func TestDelFunction(t *testing.T) {
 	ctx = context.WithValue(ctx, "Tenant-Id", "qxcr")
 
 	err = c.DelFunction(ctx, &DelFunction{
-		Name: "openfunction-samples-v207",
+		Name: "openfunction-samples-v220",
 	})
 	if err != nil {
 		panic(err)

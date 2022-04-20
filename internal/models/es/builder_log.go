@@ -32,7 +32,7 @@ func (b *builderLogRepo) Search(ctx context.Context, ID string, time time.Time,
 	boolQuery := make([]elastic.Query, 0, 2)
 	boolQuery = append(
 		boolQuery,
-		elastic.NewTermQuery(k8s.BUILD_ID, ID),
+		elastic.NewMatchQuery(k8s.RESOURCRREF, ID),
 		elastic.NewRangeQuery("time").Gte(time.UTC()),
 	)
 

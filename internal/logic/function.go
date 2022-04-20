@@ -73,15 +73,23 @@ func (g *function) Create(c context.Context, r *CreateFunctionRequest) (*CreateF
 		marshal, _ := json.Marshal(r.Env)
 		data.Env = string(marshal)
 	}
+	data.Name = strings.ToLower(data.GroupName) + "-" + data.Project + "-" + data.Version
 	unix := time2.NowUnix()
 	data.CreatedAt = unix
 	data.UpdatedAt = unix
+	one := g.functionRepo.GetByName(c, g.db, data.Name)
+	if one != nil {
+		return nil, error2.New(code.ErrFunctionExist)
+	}
 	return &CreateFunctionResponse{}, g.functionRepo.Insert(c, g.db, data)
 }
 
 type UpdateFunctionRequest struct {
-	Labels map[string]string `json:"labels"`
-	State  string            `json:"state"`
+	//Labels map[string]string `json:"labels"`
+	State       string `json:"state"`
+	ResourceRef string `json:"resourceRef"`
+	Topic       string `json:"topic"`
+	Name        string `json:"name"`
 }
 type UpdateFunctionResponse struct {
 	ID     string `json:"-"`
@@ -107,26 +115,22 @@ var result = map[string]int{
 }
 
 func (g *function) UpdateStatus(c context.Context, r *UpdateFunctionRequest) (*UpdateFunctionResponse, error) {
-	switch r.Labels[k8s.MODULE_NAME] {
 
-	case k8s.BUILD:
-		data := g.functionRepo.Get(c, g.db, r.Labels[k8s.BUILD_ID])
-		if data == nil {
-			return nil, error2.New(code.ErrDataNotExist)
-		}
-		if v, ok := result[r.State]; ok && v != 0 {
-			data.Status = v
-		}
-		unix := time2.NowUnix()
-		data.UpdatedAt = unix
-		return &UpdateFunctionResponse{
-			ID:     data.ID,
-			Status: result[r.State],
-			Topic:  r.Labels[k8s.MODULE_NAME],
-		}, g.functionRepo.Update(c, g.db, data)
+	data := g.functionRepo.GetByName(c, g.db, r.Name)
+	if data == nil {
+		return nil, error2.New(code.ErrDataNotExist)
 	}
-
-	return nil, nil
+	if v, ok := result[r.State]; ok && v != 0 {
+		data.Status = v
+	}
+	unix := time2.NowUnix()
+	data.UpdatedAt = unix
+	data.ResourceRef = r.ResourceRef
+	return &UpdateFunctionResponse{
+		ID:     data.ID,
+		Status: result[r.State],
+		Topic:  r.Topic,
+	}, g.functionRepo.Update(c, g.db, data)
 }
 
 type DeleteFunctionRequest struct {
@@ -176,6 +180,7 @@ type BuildFunctionRequest struct {
 	ID string `json:"id"`
 }
 type BuildFunctionResponse struct {
+	PodName string `json:"-"`
 }
 
 func (g *function) Build(c context.Context, r *BuildFunctionRequest) (*BuildFunctionResponse, error) {
@@ -236,9 +241,9 @@ func (g *function) DelFunction(c context.Context, r *DelBuildFunctionRequest) (*
 }
 
 type ListlogRequest struct {
-	BuildID   string `json:"buildID" form:"buildID" uri:"buildID"`
-	Index     int    `json:"index" form:"index"`
-	Timestamp int64  `json:"timestamp" form:"timestamp"`
+	ResourceRef string `json:"resourceRef" form:"resourceRef" uri:"resourceRef"`
+	Index       int    `json:"index" form:"index"`
+	Timestamp   int64  `json:"timestamp" form:"timestamp"`
 }
 type ListLogResponse struct {
 	Logs  []*models.LogVO `json:"logs"`
@@ -246,13 +251,13 @@ type ListLogResponse struct {
 }
 
 func (g *function) ListLog(c context.Context, r *ListlogRequest) (*ListLogResponse, error) {
-	fn := g.functionRepo.Get(c, g.db, r.BuildID)
-	if fn == nil {
-		return nil, error2.New(code.ErrDataNotExist)
-	}
+	//fn := g.functionRepo.Get(c, g.db, r.BuildID)
+	//if fn == nil {
+	//	return nil, error2.New(code.ErrDataNotExist)
+	//}
 
 	t := time.Unix(r.Timestamp, 0)
-	fullLogs, count, err := g.buildLogRepo.Search(c, r.BuildID, t, r.Index, 5)
+	fullLogs, count, err := g.buildLogRepo.Search(c, r.ResourceRef, t, r.Index, 5)
 	if err != nil {
 		return nil, err
 	}
