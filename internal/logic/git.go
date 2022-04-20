@@ -65,7 +65,7 @@ type UpdateGitResponse struct {
 func (g *git) Update(c context.Context, r *UpdateGitRequest) (*UpdateGitResponse, error) {
 	data := g.gitRepo.Get(c, g.db)
 	if data == nil {
-		return nil, error2.New(code.ErrDataExist)
+		return nil, error2.New(code.ErrDataNotExist)
 	}
 	data.Host = r.Host
 	data.Token = r.Token
@@ -83,7 +83,7 @@ type DeleteGitResponse struct {
 func (g *git) Delete(c context.Context, r *DeleteGitRequest) (*DeleteGitResponse, error) {
 	data := g.gitRepo.Get(c, g.db)
 	if data == nil {
-		return nil, error2.New(code.ErrDataExist)
+		return nil, error2.New(code.ErrDataNotExist)
 	}
 	return &DeleteGitResponse{}, g.gitRepo.Delete(c, g.db, r.ID)
 }

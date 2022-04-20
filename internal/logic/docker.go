@@ -46,6 +46,7 @@ func (g docker) Create(c context.Context, r *CreateDockerRequest) (*CreateDocker
 	data.UserName = r.UserName
 	data.Host = r.Host
 	data.Secret = r.Secret
+	data.NameSpace = "faas/"
 	unix := time.NowUnix()
 	data.CreatedAt = unix
 	data.UpdatedAt = unix
@@ -64,7 +65,7 @@ type UpdateDockerResponse struct {
 func (g docker) Update(c context.Context, r *UpdateDockerRequest) (*UpdateDockerResponse, error) {
 	data := g.dockerRepo.Get(c, g.db)
 	if data == nil {
-		return nil, error2.New(code.ErrDataExist)
+		return nil, error2.New(code.ErrDataNotExist)
 	}
 	data.Secret = r.Secret
 	data.UserName = r.UserName
@@ -83,7 +84,7 @@ type DeleteDockerResponse struct {
 func (g docker) Delete(c context.Context, r *DeleteDockerRequest) (*DeleteDockerResponse, error) {
 	data := g.dockerRepo.Get(c, g.db)
 	if data == nil {
-		return nil, error2.New(code.ErrDataExist)
+		return nil, error2.New(code.ErrDataNotExist)
 	}
 	return &DeleteDockerResponse{}, g.dockerRepo.Delete(c, g.db, r.ID)
 }

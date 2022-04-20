@@ -17,6 +17,8 @@ func NewGitRepo() models.GitRepo {
 }
 
 func (g *gitRepo) Insert(ctx context.Context, tx *gorm.DB, data *models.Git) error {
+	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
+	data.Name = tenantID + "-git"
 	return tx.Create(data).Error
 }
 

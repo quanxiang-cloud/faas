@@ -17,6 +17,8 @@ func NewDockerRepo() models.DockerRepo {
 }
 
 func (g *dockerRepo) Insert(ctx context.Context, tx *gorm.DB, data *models.Docker) error {
+	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
+	data.Name = tenantID + "-docker"
 	return tx.Create(data).Error
 }
 
