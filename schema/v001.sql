@@ -1,4 +1,4 @@
-create table faas.dockers
+create table dockers
 (
     id         varchar(64)  not null
         primary key,
@@ -16,26 +16,30 @@ create table faas.dockers
     tenant_id  varchar(64)  null
 );
 
-create table faas.functions
+create table functions
 (
-    id         varchar(64)  not null
+    id           varchar(64)  not null
         primary key,
-    group_name varchar(200) null,
-    project    varchar(200) null,
-    version    varchar(200) null,
-    language   varchar(200) null,
-    status     varchar(200) null,
-    env        text         null,
-    created_at bigint       null,
-    updated_at bigint       null,
-    deleted_at bigint       null,
-    created_by varchar(64)  null,
-    updated_by varchar(64)  null,
-    deleted_by varchar(64)  null,
-    tenant_id  varchar(64)  null
+    group_name   varchar(200) null,
+    project      varchar(200) null,
+    version      varchar(200) null,
+    language     varchar(200) null,
+    status       varchar(200) null,
+    env          text         null,
+    created_at   bigint       null,
+    updated_at   bigint       null,
+    deleted_at   bigint       null,
+    created_by   varchar(64)  null,
+    updated_by   varchar(64)  null,
+    deleted_by   varchar(64)  null,
+    tenant_id    varchar(64)  null,
+    resource_ref varchar(200) null,
+    name         varchar(200) null,
+    constraint functions_name_uindex
+        unique (name)
 );
 
-create table faas.gits
+create table gits
 (
     id         varchar(64)  not null
         primary key,
