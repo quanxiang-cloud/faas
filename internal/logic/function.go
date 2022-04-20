@@ -251,10 +251,10 @@ type ListLogResponse struct {
 }
 
 func (g *function) ListLog(c context.Context, r *ListlogRequest) (*ListLogResponse, error) {
-	//fn := g.functionRepo.Get(c, g.db, r.BuildID)
-	//if fn == nil {
-	//	return nil, error2.New(code.ErrDataNotExist)
-	//}
+	fn := g.functionRepo.GetByResourceRef(c, g.db, r.ResourceRef)
+	if fn == nil {
+		return nil, error2.New(code.ErrDataNotExist)
+	}
 
 	t := time.Unix(r.Timestamp, 0)
 	fullLogs, count, err := g.buildLogRepo.Search(c, r.ResourceRef, t, r.Index, 5)

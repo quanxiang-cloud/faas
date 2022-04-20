@@ -36,4 +36,5 @@ type FunctionRepo interface {
 	Delete(ctx context.Context, tx *gorm.DB, id ...string) error
 	Get(ctx context.Context, db *gorm.DB, id string) *Function
 	GetByName(ctx context.Context, db *gorm.DB, name string) *Function
+	GetByResourceRef(ctx context.Context, db *gorm.DB, resourceRef string) *Function
 }
