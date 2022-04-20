@@ -74,14 +74,14 @@ func (f *Function) UpdateStatus(c *gin.Context) {
 		resp.Format(nil, err).Context(c)
 		return
 	}
-	//_, err = f.ps.Publish(ginheader.MutateContext(c), &logic.PublishReq{
-	//	Topic: response.Topic,
-	//	Key:   response.ID,
-	//})
-	//if err != nil {
-	//	resp.Format(nil, err).Context(c)
-	//	return
-	//}
+	_, err = f.ps.Publish(ginheader.MutateContext(c), &logic.PublishReq{
+		Topic: response.Topic,
+		Key:   response.ID,
+	})
+	if err != nil {
+		resp.Format(nil, err).Context(c)
+		return
+	}
 	resp.Format(response, nil).Context(c)
 }
 
