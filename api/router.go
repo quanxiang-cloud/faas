@@ -51,7 +51,34 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 		d.DELETE("/del", dockerAPI.Delete)
 		d.GET("/get", dockerAPI.Get)
 	}
+	userAPI := NewUserAPI(ctx, c, db)
+	groupAPI := NewGroupAPI(ctx, c, db)
+	projectAPI := NewProjectAPI(ctx, c, db)
+	user := v1.Group("/user")
+	{
+		user.POST("", userAPI.CreateUser)
+	}
+	group := v1.Group("/group")
+	{
+		group.POST("", groupAPI.Create)
+		group.POST("/:groupID/addmember", groupAPI.BindingGroup)
+		group.GET("/:groupID/project/list", projectAPI.GetList)
+	}
+	check := v1.Group("/check")
+	{
+		check.GET("/group", groupAPI.CheckGroup)
+		check.GET("/member", groupAPI.CheckMember)
+		check.GET("/developer", userAPI.CheckUser)
+	}
 
+	project := v1.Group("/project")
+	{
+		project.POST("/create", projectAPI.CreateProject)
+		project.GET("/project/:projectID/info", projectAPI.GetProjectByID)
+		project.PUT("/project/:projectID/updateDesc", projectAPI.UpdDescribe)
+		project.DELETE("/project/:projectID/delete", projectAPI.DelProject)
+		project.GET("/group")
+	}
 	{
 		probe := probe.New(util.LoggerFromContext(ctx))
 		engine.GET("liveness", func(c *gin.Context) {

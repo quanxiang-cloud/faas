@@ -2,7 +2,7 @@ package git
 
 import (
 	"context"
-	"faas/pkg/git/define"
+	"github.com/quanxiang-cloud/faas/pkg/git/define"
 )
 
 type GIT interface {
@@ -21,4 +21,5 @@ type GIT interface {
 	CreateProject(ctx context.Context, name string, namespaceID int) (*define.Project, error)
 	GetProjectByName(ctx context.Context, name string) (*define.Project, error)
 	GetProjectByID(ctx context.Context, id int) (*define.Project, error)
+	GetGroupProjects(ctx context.Context, gid interface{}) ([]*define.Project, error)
 }

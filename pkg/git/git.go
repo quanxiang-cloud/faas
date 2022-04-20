@@ -1,9 +1,9 @@
 package git
 
 import (
-	"faas/pkg/git/define"
-	"faas/pkg/git/gitlab"
 	"fmt"
+	"github.com/quanxiang-cloud/faas/pkg/git/define"
+	"github.com/quanxiang-cloud/faas/pkg/git/gitlab"
 )
 
 type GitType int

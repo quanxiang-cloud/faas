@@ -2,8 +2,8 @@ package gitlab
 
 import (
 	"context"
-	"faas/pkg/git/define"
 	"fmt"
+	"github.com/quanxiang-cloud/faas/pkg/git/define"
 	"net/http"
 
 	"github.com/xanzy/go-gitlab"
@@ -127,7 +127,7 @@ func (g *GIT) CreateGroup(ctx context.Context, name, path string) (*define.Group
 }
 
 func (g *GIT) GetGroupByName(ctx context.Context, name string) (*define.Group, error) {
-	group, _, err := g.git.Groups.GetGroup(name)
+	group, _, err := g.git.Groups.GetGroup(name, &gitlab.GetGroupOptions{})
 	if err, ok := err.(*gitlab.ErrorResponse); ok {
 		if err.Response.StatusCode == http.StatusNotFound {
 			return nil, nil
@@ -213,4 +213,31 @@ func (g *GIT) getProject(ctx context.Context, pid interface{}) (*define.Project,
 		LastActivityAt: project.LastActivityAt,
 		CreatorID:      project.CreatorID,
 	}, nil
+}
+
+func (g *GIT) GetGroupProjects(ctx context.Context, gid interface{}) ([]*define.Project, error) {
+	projects, _, err := g.git.Groups.ListGroupProjects(gid, &gitlab.ListGroupProjectsOptions{})
+	if err, ok := err.(*gitlab.ErrorResponse); ok {
+		if err.Response.StatusCode == http.StatusNotFound {
+			return nil, nil
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+	projectsResp := make([]*define.Project, 0, len(projects))
+	for _, project := range projects {
+		projectsResp = append(projectsResp, &define.Project{
+			ID:             project.ID,
+			Description:    project.Description,
+			Public:         project.Public,
+			Visibility:     string(project.Visibility),
+			Name:           project.Name,
+			Path:           project.Path,
+			CreatedAt:      project.CreatedAt,
+			LastActivityAt: project.LastActivityAt,
+			CreatorID:      project.CreatorID,
+		}, nil)
+	}
+	return projectsResp, nil
 }
