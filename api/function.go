@@ -2,6 +2,7 @@ package restful
 
 import (
 	"context"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"github.com/olivere/elastic/v7"
@@ -129,9 +130,15 @@ func (f *Function) List(c *gin.Context) {
 		GroupID:   c.Param("groupID"),
 		ProjectID: c.Param("projectID"),
 	}
+	resp.Format(f.fn.List(ctx, req)).Context(c)
+}
+
+func (f *Function) RegSwagger(c *gin.Context) {
+	req := &logic.RegSwaggerReq{}
 	if err := c.ShouldBind(req); err != nil {
 		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
 		return
 	}
-	resp.Format(f.fn.List(ctx, req)).Context(c)
+
+	resp.Format(f.fn.RegSwagger(ginheader.MutateContext(c), req)).Context(c)
 }

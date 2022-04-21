@@ -2,6 +2,7 @@ package restful
 
 import (
 	"context"
+
 	elastic2 "github.com/quanxiang-cloud/cabin/tailormade/db/elastic"
 	mysql2 "github.com/quanxiang-cloud/cabin/tailormade/db/mysql"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
@@ -44,7 +45,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 	if err != nil {
 		return nil, err
 	}
-	k8sClient, err := k8s.NewClient(c.K8s.NameSpace)
+	k8sClient := k8s.NewClient(c.K8s.NameSpace)
 
 	engine, err := newRouter(c)
 	if err != nil {
@@ -76,7 +77,6 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 			cmGroup.POST("/subscribe", cm.Subscribe)
 		}
 	}
-
 	{
 
 		userAPI := NewUserAPI(ctx, c, db)
@@ -119,6 +119,14 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 			f.GET("/logger/:resourceRef", fnAPI.ListLog)
 			f.GET("/list/:projectID", fnAPI.List)
 		}
+	}
+
+	// TODO: restful
+	svcApi := NewServing(db, c, k8sClient)
+	svc := v1.Group("/svc")
+	{
+		svc.PUT("/svc", svcApi.serve)
+		svc.DELETE("/svc", svcApi.offline)
 	}
 
 	{

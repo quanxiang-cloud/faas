@@ -19,6 +19,8 @@ const (
 	ErrDataNotExist = 90014000004
 	// ErrFunctionExist 函数已创建
 	ErrFunctionExist = 90014000005
+	// ErrDataIllegal 数据不合法
+	ErrDataIllegal = 90014000006
 )
 
 // CodeTable 码表
@@ -29,4 +31,5 @@ var CodeTable = map[int64]string{
 	ErrDataExist:     "数据已经存在",
 	ErrDataNotExist:  "数据不存在",
 	ErrFunctionExist: "函数已创建",
+	ErrDataIllegal:   "数据不合法",
 }
