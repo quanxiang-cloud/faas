@@ -21,6 +21,7 @@ require (
 replace (
 	github.com/go-logr/logr => github.com/go-logr/logr v1.2.0
 	github.com/openfunction => github.com/OpenFunction/OpenFunction v0.6.0
+	//github.com/quanxiang-cloud/organizations => ../../../github.com/quanxiang-cloud/organizations
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.21.4
 	k8s.io/client-go => k8s.io/client-go v0.23.5
 	k8s.io/klog/v2 => k8s.io/klog/v2 v2.30.0
@@ -28,10 +29,11 @@ replace (
 )
 
 require (
-	git.internal.yunify.com/qxp/misc v0.0.0-20211230072102-f37610800c2f
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/jinzhu/now v1.1.4 // indirect
 	github.com/olivere/elastic/v7 v7.0.30
 	github.com/quanxiang-cloud/organizations v1.0.3
+	//github.com/quanxiang-cloud/organizations v0.0.0-00010101000000-000000000000
+	// v1.0.3
 	github.com/xanzy/go-gitlab v0.63.0
 )

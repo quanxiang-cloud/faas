@@ -90,6 +90,7 @@ func (g *groupService) CreateGroup(ctx context.Context, req *CreateGroupReq) (*C
 		}
 	}
 	tx.Commit()
+	// TODO return group id
 	return &CreateGroupResp{}, nil
 }
 

@@ -79,6 +79,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 	{
 		group.POST("", groupAPI.Create)
 		group.POST("/:groupID/addmember", groupAPI.BindingGroup)
+		group.POST("/:groupID/project", projectAPI.CreateProject)
 		group.GET("/:groupID/project/list", projectAPI.GetList)
 	}
 	check := v1.Group("/check")
@@ -90,7 +91,6 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 
 	project := v1.Group("/project")
 	{
-		project.POST("/create", projectAPI.CreateProject)
 		project.GET("/project/:projectID/info", projectAPI.GetProjectByID)
 		project.PUT("/project/:projectID/updateDesc", projectAPI.UpdDescribe)
 		project.DELETE("/project/:projectID/delete", projectAPI.DelProject)

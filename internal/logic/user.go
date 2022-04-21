@@ -76,6 +76,7 @@ func (u *userSerice) CreateUser(ctx context.Context, req *CreateUserReq) (*Creat
 	err = u.userRepo.Insert(tx, &models.User{
 		ID:        id.StringUUID(),
 		UserID:    req.UserID,
+		GitName:   userInfo.Name,
 		GitID:     user.ID,
 		CreatedAt: time.NowUnix(),
 		UpdatedAt: time.NowUnix(),

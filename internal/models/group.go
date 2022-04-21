@@ -9,7 +9,6 @@ type Group struct {
 	Describe  string
 	CreatedAt int64
 	UpdatedAt int64
-	DeletedAt int64
 	CreatedBy string
 	UpdatedBy string
 	DeletedBy string

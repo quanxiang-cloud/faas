@@ -9,7 +9,6 @@ type User struct {
 	GitName   string
 	CreatedAt int64
 	UpdatedAt int64
-	DeletedAt int64
 	CreatedBy string
 	UpdatedBy string
 	DeletedBy string

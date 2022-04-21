@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"git.internal.yunify.com/qxp/misc/elastic2"
-	"git.internal.yunify.com/qxp/misc/logger"
+	"github.com/quanxiang-cloud/cabin/logger"
+	elastic2 "github.com/quanxiang-cloud/cabin/tailormade/db/elastic"
 )
 
 func Test_builderLogRepo_Search(t *testing.T) {

@@ -22,12 +22,13 @@ func (g *groupRepo) Insert(db *gorm.DB, group *models.Group) error {
 
 func (g *groupRepo) GetByName(db *gorm.DB, name string) (*models.Group, error) {
 	res := &models.Group{}
-	err := g.getTable(db).Where("group_name = ?", name).Find(&res).Error
-	if err == gorm.ErrRecordNotFound {
-		return nil, nil
-	}
+	db = g.getTable(db).Where("group_name = ?", name).Find(&res)
+	err := db.Error
 	if err != nil {
 		return nil, err
+	}
+	if db.RowsAffected <= 0 {
+		return nil, nil
 	}
 	return res, nil
 }
