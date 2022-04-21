@@ -33,8 +33,10 @@ func NewGit(c context.Context, db *gorm.DB) Git {
 }
 
 type CreateGitRequest struct {
-	Host  string `json:"host"`
-	Token string `json:"token"`
+	Host       string `json:"host"`
+	KnownHosts string `json:"knownHosts"`
+	Token      string `json:"token"`
+	SSH        string `json:"ssh"`
 }
 type CreateGitResponse struct {
 }
@@ -48,6 +50,8 @@ func (g *git) Create(c context.Context, r *CreateGitRequest) (*CreateGitResponse
 	data.ID = id.ShortID(0)
 	data.Host = r.Host
 	data.Token = r.Token
+	data.SSH = r.SSH
+	data.KnownHosts = r.KnownHosts
 	unix := time.NowUnix()
 	data.CreatedAt = unix
 	data.UpdatedAt = unix

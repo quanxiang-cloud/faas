@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"flag"
-	"github.com/quanxiang-cloud/faas/internal/models"
 	"github.com/quanxiang-cloud/faas/pkg/k8s"
 	"os"
 	"os/signal"
@@ -40,7 +39,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	db.AutoMigrate(models.Function{})
 	k8sClient, err := k8s.NewClient(conf.K8s.NameSpace)
 	// start
 	ctx := context.Background()

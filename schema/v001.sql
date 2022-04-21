@@ -1,4 +1,4 @@
-create table dockers
+create table faas.dockers
 (
     id         varchar(64)  not null
         primary key,
@@ -16,7 +16,7 @@ create table dockers
     tenant_id  varchar(64)  null
 );
 
-create table functions
+create table faas.functions
 (
     id           varchar(64)  not null
         primary key,
@@ -39,7 +39,7 @@ create table functions
         unique (name)
 );
 
-create table gits
+create table faas.gits
 (
     id         varchar(64)  not null
         primary key,

@@ -19,6 +19,7 @@ import (
 
 type Client interface {
 	CreateGitToken(ctx context.Context, host, token string) error
+	CreateGitSSh(ctx context.Context, host, ssh string) error
 	CreateDocker(ctx context.Context, host, username, secret string) error
 	Build(ctx context.Context, data *Function) error
 	DelFunction(ctx context.Context, data *DelFunction) error
@@ -56,6 +57,31 @@ func (c *client) CreateGitToken(ctx context.Context, host, token string) error {
 	data["token"] = []byte(token)
 	s := &v1.Secret{
 		Type: v1.SecretTypeOpaque,
+		ObjectMeta: ctrl.ObjectMeta{
+			Name:      tenantID + "-git",
+			Namespace: c.k8sNamespace,
+		},
+		Data: data,
+	}
+	options := metav1.CreateOptions{}
+	_, err := secret.Create(ctx, s, options)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func (c *client) CreateGitSSh(ctx context.Context, host, ssh string) error {
+	secret := c.client.CoreV1().Secrets(c.k8sNamespace)
+	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
+	if tenantID == "" || tenantID == UnexpectedType {
+		tenantID = Default
+	}
+	data := make(map[string][]byte)
+	data["known_hosts"] = []byte(host)
+	data["ssh-privatekey"] = []byte(ssh)
+	s := &v1.Secret{
+		Type: v1.SecretTypeSSHAuth,
 		ObjectMeta: ctrl.ObjectMeta{
 			Name:      tenantID + "-git",
 			Namespace: c.k8sNamespace,
@@ -152,24 +178,10 @@ const (
 )
 
 func (c *client) Build(ctx context.Context, data *Function) error {
-	//_, tenantID := ginheader.GetTenantID(ctx).Wreck()
 	fn := c.ofn.CoreV1beta1().Functions(c.k8sNamespace)
-	SourceSubPath := "functions/knative/hello-world-go"
-	//lable := make(map[string]string)
-	//lable[BUILD_ID] = data.ID
-	//lable[GROUP] = data.GroupName
-	//lable[PROJECT_TAG] = data.Version
-	//lable[PROJECT] = data.Project
-	//lable[TENENT_ID] = tenantID
-	//lable[MODULE_NAME] = BUILD
 	function := &v1beta1.Function{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: strings.ToLower(data.GroupName) + "-" + data.Project + "-" + data.Version,
-			//Labels: lable,
-			Annotations: map[string]string{
-				"123":  "123",
-				"faas": "faas",
-			},
 		},
 		Spec: v1beta1.FunctionSpec{
 			Version: &data.Version,
@@ -186,8 +198,10 @@ func (c *client) Build(ctx context.Context, data *Function) error {
 				Builder: &data.Builder,
 				Env:     data.ENV,
 				SrcRepo: &v1beta1.GitRepo{
-					Url:           data.Git.Host + data.GroupName + "/" + data.Project + ".git",
-					SourceSubPath: &SourceSubPath,
+					Url: data.Git.Host + data.GroupName + "/" + data.Project + ".git",
+					Credentials: &v1.LocalObjectReference{
+						Name: data.Git.Name,
+					},
 				},
 			},
 		},

@@ -46,16 +46,16 @@ func TestBuilder(t *testing.T) {
 	ctx := context.Background()
 	ctx = context.WithValue(ctx, "Tenant-Id", "qxcr")
 	function := &Function{
-		ID:        "2",
-		Version:   "v220",
-		Project:   "samples",
-		GroupName: "OpenFunction",
+		ID:        "1",
+		Version:   "v007",
+		Project:   "faasdemo",
+		GroupName: "root",
 		Git: &Git{
-			Name: "",
-			Host: "https://github.com/",
+			Name: "demo",
+			Host: "ssh://git@192.168.201.3:30679/",
 		},
 		Docker: &Docker{
-			NameSpace: "faas/",
+			NameSpace: "privitetest/",
 			Name:      "qxcr",
 			Host:      "qxcr.xyz/",
 		},
