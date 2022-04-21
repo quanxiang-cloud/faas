@@ -17,9 +17,10 @@ import (
 	"time"
 )
 
+// Client Client
 type Client interface {
 	CreateGitToken(ctx context.Context, host, token string) error
-	CreateGitSSh(ctx context.Context, host, ssh string) error
+	CreateGitSSH(ctx context.Context, host, ssh string) error
 	CreateDocker(ctx context.Context, host, username, secret string) error
 	Build(ctx context.Context, data *Function) error
 	DelFunction(ctx context.Context, data *DelFunction) error
@@ -32,6 +33,7 @@ type client struct {
 	dockerNamespace string
 }
 
+// NewClient NewClient
 func NewClient(namespace string) (Client, error) {
 	config := ctrl.GetConfigOrDie()
 	clientset := kubernetes.NewForConfigOrDie(config)
@@ -43,7 +45,10 @@ func NewClient(namespace string) (Client, error) {
 	}, nil
 }
 
+// UnexpectedType UnexpectedType
 const UnexpectedType = "unexpected type"
+
+// Default Default
 const Default = "faas"
 
 func (c *client) CreateGitToken(ctx context.Context, host, token string) error {
@@ -71,7 +76,8 @@ func (c *client) CreateGitToken(ctx context.Context, host, token string) error {
 	return err
 }
 
-func (c *client) CreateGitSSh(ctx context.Context, host, ssh string) error {
+// CreateGitSSH CreateGitSSH
+func (c *client) CreateGitSSH(ctx context.Context, host, ssh string) error {
 	secret := c.client.CoreV1().Secrets(c.k8sNamespace)
 	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
 	if tenantID == "" || tenantID == UnexpectedType {
@@ -143,6 +149,7 @@ func (c *client) CreateDocker(ctx context.Context, host, username, secret string
 	return err
 }
 
+// Function Function
 type Function struct {
 	ID        string
 	Version   string
@@ -154,26 +161,35 @@ type Function struct {
 	ENV       map[string]string
 }
 
+// Docker Docker
 type Docker struct {
 	Host      string
 	NameSpace string
 	Name      string
 }
 
+// Git Git
 type Git struct {
 	Name string
 	Host string
 }
 
 const (
+	// RESOURCRREF RESOURCRREF
 	RESOURCRREF = "kubernetes.pod_name"
-	BUILD_ID    = "quanxiang.faas.build/id"
-	GROUP       = "quanxiang.faas/group"
-	PROJECT_TAG = "quanxiang.faas.project/tag"
-	PROJECT     = "quanxiang.faas/project"
-	TENENT_ID   = "quanxiang.faas/tenantID"
-	MODULE_NAME = "quanxiang.faas.module/name"
-
+	// BuildID BuildID
+	BuildID = "quanxiang.faas.build/id"
+	// GROUP GROUP
+	GROUP = "quanxiang.faas/group"
+	// ProjectTAG ProjectTAG
+	ProjectTAG = "quanxiang.faas.project/tag"
+	// PROJECT PROJECT
+	PROJECT = "quanxiang.faas/project"
+	// TenentID TenentID
+	TenentID = "quanxiang.faas/tenantID"
+	// ModuleNAME ModuleNAME
+	ModuleNAME = "quanxiang.faas.module/name"
+	// BUILD BUILD
 	BUILD = "build"
 )
 
@@ -210,10 +226,12 @@ func (c *client) Build(ctx context.Context, data *Function) error {
 	return err
 }
 
+// GetBuilder GetBuilder
 func GetBuilder(language string) string {
 	return "openfunction/builder-go:latest"
 }
 
+// DelFunction DelFunction
 type DelFunction struct {
 	Name string
 }

@@ -107,7 +107,8 @@ func (f *Function) Get(c *gin.Context) {
 	resp.Format(f.fn.Get(ginheader.MutateContext(c), r)).Context(c)
 }
 
-func (b *Function) ListLog(c *gin.Context) {
+// ListLog ListLog
+func (f *Function) ListLog(c *gin.Context) {
 	ctx := c.Request.Context()
 	req := &logic.ListlogRequest{
 		ResourceRef: c.Param("resourceRef"),
@@ -116,5 +117,5 @@ func (b *Function) ListLog(c *gin.Context) {
 		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
 		return
 	}
-	resp.Format(b.fn.ListLog(ctx, req)).Context(c)
+	resp.Format(f.fn.ListLog(ctx, req)).Context(c)
 }

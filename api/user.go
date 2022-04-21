@@ -16,16 +16,19 @@ const (
 	_userID = "User-Id"
 )
 
+// UserAPI UserAPI
 type UserAPI struct {
 	userService logic.UserService
 }
 
+// NewUserAPI NewUserAPI
 func NewUserAPI(ctx context.Context, conf *config.Config, db *gorm.DB) *UserAPI {
 	return &UserAPI{
 		userService: logic.NewUserService(ctx, db, conf),
 	}
 }
 
+// CreateUser CreateUser
 func (u *UserAPI) CreateUser(c *gin.Context) {
 	req := &logic.CreateUserReq{}
 	if err := c.ShouldBind(req); err != nil {

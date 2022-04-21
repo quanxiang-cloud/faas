@@ -9,16 +9,19 @@ import (
 	"net/http"
 )
 
+// Compound Compound
 type Compound struct {
 	ps logic.PubSub
 }
 
+// NewCompoundAPI NewCompoundAPI
 func NewCompoundAPI(ctx context.Context, redisClient redis.UniversalClient) *Compound {
 	return &Compound{
 		ps: logic.NewPubSub(ctx, redisClient),
 	}
 }
 
+// Subscribe Subscribe
 func (cu *Compound) Subscribe(c *gin.Context) {
 	ctx := c.Request.Context()
 

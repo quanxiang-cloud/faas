@@ -12,16 +12,19 @@ import (
 	"gorm.io/gorm"
 )
 
+// ProjectAPI ProjectAPI
 type ProjectAPI struct {
 	projectService logic.ProjectService
 }
 
+// NewProjectAPI NewProjectAPI
 func NewProjectAPI(ctx context.Context, conf *config.Config, db *gorm.DB) *ProjectAPI {
 	return &ProjectAPI{
 		projectService: logic.NewProjectService(ctx, db, conf),
 	}
 }
 
+// CreateProject CreateProject
 func (p *ProjectAPI) CreateProject(c *gin.Context) {
 	req := &logic.CreateProjectReq{}
 	if err := c.ShouldBind(req); err != nil {
@@ -35,6 +38,7 @@ func (p *ProjectAPI) CreateProject(c *gin.Context) {
 	resp.Format(p.projectService.CreateProject(ctx, req)).Context(c)
 }
 
+// GetProjectByID GetProjectByID
 func (p *ProjectAPI) GetProjectByID(c *gin.Context) {
 	req := &logic.GetProjectByIDReq{}
 	ctx := ginheader.MutateContext(c)
@@ -42,6 +46,7 @@ func (p *ProjectAPI) GetProjectByID(c *gin.Context) {
 	resp.Format(p.projectService.GetProjectByID(ctx, req)).Context(c)
 }
 
+// GetList GetList
 func (p *ProjectAPI) GetList(c *gin.Context) {
 	req := &logic.GetListReq{}
 	if err := c.ShouldBind(req); err != nil {
@@ -53,6 +58,7 @@ func (p *ProjectAPI) GetList(c *gin.Context) {
 	resp.Format(p.projectService.GetList(ctx, req)).Context(c)
 }
 
+// DelProject DelProject
 func (p *ProjectAPI) DelProject(c *gin.Context) {
 	req := &logic.DelProjectReq{}
 	req.ProjectID = c.Param("projectID")
@@ -60,6 +66,7 @@ func (p *ProjectAPI) DelProject(c *gin.Context) {
 	resp.Format(p.projectService.DelProject(ctx, req)).Context(c)
 }
 
+// UpdDescribe UpdDescribe
 func (p *ProjectAPI) UpdDescribe(c *gin.Context) {
 	req := &logic.UpdateDescribeReq{}
 	if err := c.ShouldBind(req); err != nil {

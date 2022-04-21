@@ -37,6 +37,8 @@ type function struct {
 	k8sc         k8s.Client
 	conf         config.Config
 	buildLogRepo models.BuilderLogRepo
+	groupRepo    models.GroupRepo
+	projectRepo  models.ProjectRepo
 }
 
 func NewFunction(c context.Context, db *gorm.DB, conf config.Config, kc k8s.Client, esClient *elastic.Client) Function {
@@ -48,12 +50,14 @@ func NewFunction(c context.Context, db *gorm.DB, conf config.Config, kc k8s.Clie
 		conf:         conf,
 		k8sc:         kc,
 		buildLogRepo: es.NewBuildLogRepo(esClient),
+		projectRepo:  mysql.NewProjectRepo(),
+		groupRepo:    mysql.NewGroupRepo(),
 	}
 }
 
 type CreateFunctionRequest struct {
-	GroupName string            `json:"groupName"`
-	Project   string            `json:"project"`
+	GroupID   string            `json:"groupID"`
+	ProjectID string            `json:"projectID"`
 	Version   string            `json:"version"`
 	Language  string            `json:"language"`
 	Env       map[string]string `json:"env"`
@@ -65,15 +69,23 @@ type CreateFunctionResponse struct {
 func (g *function) Create(c context.Context, r *CreateFunctionRequest) (*CreateFunctionResponse, error) {
 	data := &models.Function{}
 	data.ID = id.ShortID(0)
-	data.GroupName = r.GroupName
+	data.GroupID = r.GroupID
 	data.Language = r.Language
-	data.Project = r.Project
+	data.ProjectID = r.ProjectID
 	data.Version = r.Version
 	if r.Env != nil {
 		marshal, _ := json.Marshal(r.Env)
 		data.Env = string(marshal)
 	}
-	data.Name = strings.ToLower(data.GroupName) + "-" + data.Project + "-" + data.Version
+	group, err := g.groupRepo.Get(g.db, r.GroupID)
+	if err != nil || group == nil {
+		return nil, error2.New(code.ErrDataNotExist)
+	}
+	project, err := g.projectRepo.Get(g.db, r.ProjectID)
+	if err != nil || project == nil {
+		return nil, error2.New(code.ErrDataNotExist)
+	}
+	data.Name = strings.ToLower(group.GroupName) + "-" + project.ProjectName + "-" + data.Version
 	unix := time2.NowUnix()
 	data.CreatedAt = unix
 	data.UpdatedAt = unix
@@ -164,10 +176,18 @@ func (g *function) Get(c context.Context, r *GetFunctionRequest) (*GetFunctionRe
 	if data == nil {
 		return nil, nil
 	}
+	group, err := g.groupRepo.Get(g.db, data.GroupID)
+	if err != nil || group == nil {
+		return nil, error2.New(code.ErrDataNotExist)
+	}
+	project, err := g.projectRepo.Get(g.db, data.ProjectID)
+	if err != nil || project == nil {
+		return nil, error2.New(code.ErrDataNotExist)
+	}
 	res := &GetFunctionResponse{
 		ID:        data.ID,
-		GroupName: data.GroupName,
-		Project:   data.Project,
+		GroupName: group.GroupName,
+		Project:   project.ProjectName,
 		Version:   data.Version,
 		Language:  data.Language,
 		UpdatedAt: data.UpdatedAt,
@@ -188,6 +208,14 @@ func (g *function) Build(c context.Context, r *BuildFunctionRequest) (*BuildFunc
 	if fnData == nil {
 		return nil, error2.New(code.ErrDataNotExist)
 	}
+	group, err := g.groupRepo.Get(g.db, fnData.GroupID)
+	if err != nil || group == nil {
+		return nil, error2.New(code.ErrDataNotExist)
+	}
+	project, err := g.projectRepo.Get(g.db, fnData.ProjectID)
+	if err != nil || project == nil {
+		return nil, error2.New(code.ErrDataNotExist)
+	}
 	gitData := g.gitRepo.Get(c, g.db)
 	if gitData == nil {
 		return nil, error2.New(code.ErrDataNotExist)
@@ -202,8 +230,8 @@ func (g *function) Build(c context.Context, r *BuildFunctionRequest) (*BuildFunc
 	}
 	return &BuildFunctionResponse{}, g.k8sc.Build(c, &k8s.Function{
 		Version:   fnData.Version,
-		Project:   fnData.Project,
-		GroupName: fnData.GroupName,
+		Project:   project.ProjectName,
+		GroupName: group.GroupName,
 		Git: &k8s.Git{
 			Name: gitData.Name,
 			Host: gitData.Host,
@@ -229,9 +257,17 @@ func (g *function) DelFunction(c context.Context, r *DelBuildFunctionRequest) (*
 
 	if r.Status == int(StatusOK) || r.Status == int(StatusFailed) {
 		fnData := g.functionRepo.Get(c, g.db, r.ID)
+		group, err := g.groupRepo.Get(g.db, fnData.GroupID)
+		if err != nil || group == nil {
+			return nil, error2.New(code.ErrDataNotExist)
+		}
+		project, err := g.projectRepo.Get(g.db, fnData.ProjectID)
+		if err != nil || project == nil {
+			return nil, error2.New(code.ErrDataNotExist)
+		}
 		if fnData != nil {
 			return nil, g.k8sc.DelFunction(c, &k8s.DelFunction{
-				Name: strings.ToLower(fnData.GroupName) + "-" + fnData.Project + "-" + fnData.Version,
+				Name: strings.ToLower(group.GroupName) + "-" + project.ProjectName + "-" + fnData.Version,
 			})
 		}
 		return nil, nil

@@ -7,8 +7,8 @@ import (
 
 type Function struct {
 	ID          string `gorm:"column:id;type:varchar(64);PRIMARY_KEY" json:"id"`
-	GroupName   string `gorm:"column:group_name;type:varchar(200);" json:"groupName"`
-	Project     string `gorm:"column:project;type:varchar(200);" json:"project"`
+	GroupID     string `gorm:"column:group_ID;type:varchar(64);" json:"groupID"`
+	ProjectID   string `gorm:"column:project_id;type:varchar(64);" json:"projectID"`
 	Version     string `gorm:"column:version;type:varchar(200);" json:"version"`
 	Language    string `gorm:"column:language;type:varchar(200);" json:"language"`
 	Status      int    `gorm:"column:status;type:varchar(200);" json:"status"`

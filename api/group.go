@@ -12,16 +12,19 @@ import (
 	"gorm.io/gorm"
 )
 
+// GroupAPI GroupAPI
 type GroupAPI struct {
 	groupService logic.GroupService
 }
 
+// NewGroupAPI NewGroupAPI
 func NewGroupAPI(c context.Context, conf *config.Config, db *gorm.DB) *GroupAPI {
 	return &GroupAPI{
 		groupService: logic.NewGroupService(c, db, conf),
 	}
 }
 
+// Create Create
 func (g *GroupAPI) Create(c *gin.Context) {
 	req := &logic.CreateGroupReq{}
 	if err := c.ShouldBind(req); err != nil {
@@ -33,6 +36,7 @@ func (g *GroupAPI) Create(c *gin.Context) {
 	resp.Format(g.groupService.CreateGroup(ctx, req)).Context(c)
 }
 
+// BindingGroup BindingGroup
 func (g *GroupAPI) BindingGroup(c *gin.Context) {
 	req := &logic.BindingGroupReq{}
 	if err := c.ShouldBind(req); err != nil {
@@ -45,6 +49,7 @@ func (g *GroupAPI) BindingGroup(c *gin.Context) {
 	resp.Format(g.groupService.BindingGroup(ctx, req)).Context(c)
 }
 
+// CheckGroup CheckGroup
 func (g *GroupAPI) CheckGroup(c *gin.Context) {
 	req := &logic.CheckGroupReq{}
 	if err := c.ShouldBind(req); err != nil {
@@ -55,6 +60,7 @@ func (g *GroupAPI) CheckGroup(c *gin.Context) {
 	resp.Format(g.groupService.CheckGroup(ctx, req)).Context(c)
 }
 
+// CheckMember CheckMember
 func (g *GroupAPI) CheckMember(c *gin.Context) {
 	req := &logic.CheckMemberReq{}
 	if err := c.ShouldBind(req); err != nil {
