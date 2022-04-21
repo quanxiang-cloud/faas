@@ -2,10 +2,12 @@ package logic
 
 import (
 	"context"
+	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/id"
 	"github.com/quanxiang-cloud/cabin/time"
 	"github.com/quanxiang-cloud/faas/internal/models"
 	"github.com/quanxiang-cloud/faas/internal/models/mysql"
+	"github.com/quanxiang-cloud/faas/pkg/code"
 	"github.com/quanxiang-cloud/faas/pkg/config"
 	git2 "github.com/quanxiang-cloud/faas/pkg/git"
 	"gorm.io/gorm"
@@ -43,6 +45,7 @@ type CreateGroupReq struct {
 }
 
 type CreateGroupResp struct {
+	GroupID string `json:"groupID"`
 }
 
 func (g *groupService) CreateGroup(ctx context.Context, req *CreateGroupReq) (*CreateGroupResp, error) {
@@ -50,9 +53,8 @@ func (g *groupService) CreateGroup(ctx context.Context, req *CreateGroupReq) (*C
 	// get the git host in tenant
 	gitHost := g.gitRepo.Get(ctx, tx)
 	if gitHost == nil {
-		// TODO
 		tx.Rollback()
-		return nil, nil
+		return nil, error2.New(code.ErrDataNotExist)
 	}
 	// get the git admin client
 	client, err := git2.GetClient(git2.Gitlab, gitHost.Token, gitHost.Host)
@@ -72,10 +74,12 @@ func (g *groupService) CreateGroup(ctx context.Context, req *CreateGroupReq) (*C
 		tx.Rollback()
 		return nil, err
 	}
+	groupID := groupInfo.ID
 	if groupInfo == nil {
+		groupID = id.StringUUID()
 		// group information is stored
 		err = g.groupRepo.Insert(tx, &models.Group{
-			ID:        id.StringUUID(),
+			ID:        groupID,
 			GroupName: group.Name,
 			GroupID:   group.ID,
 			Describe:  group.Description,
@@ -90,8 +94,9 @@ func (g *groupService) CreateGroup(ctx context.Context, req *CreateGroupReq) (*C
 		}
 	}
 	tx.Commit()
-	// TODO return group id
-	return &CreateGroupResp{}, nil
+	return &CreateGroupResp{
+		GroupID: groupID,
+	}, nil
 }
 
 // BindingGroupReq BindingGroupReq
@@ -107,9 +112,8 @@ func (g *groupService) BindingGroup(ctx context.Context, req *BindingGroupReq) (
 	tx := g.db.Begin()
 	gitHost := g.gitRepo.Get(ctx, tx)
 	if gitHost == nil {
-		// TODO return err
 		tx.Rollback()
-		return nil, nil
+		return nil, error2.New(code.ErrDataNotExist)
 	}
 	client, err := git2.GetClient(git2.Gitlab, gitHost.Token, gitHost.Host)
 	if err != nil {

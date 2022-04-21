@@ -2,10 +2,12 @@ package logic
 
 import (
 	"context"
+	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/id"
 	"github.com/quanxiang-cloud/cabin/time"
 	"github.com/quanxiang-cloud/faas/internal/models"
 	"github.com/quanxiang-cloud/faas/internal/models/mysql"
+	"github.com/quanxiang-cloud/faas/pkg/code"
 	"github.com/quanxiang-cloud/faas/pkg/config"
 	git2 "github.com/quanxiang-cloud/faas/pkg/git"
 	"gorm.io/gorm"
@@ -43,6 +45,7 @@ type CreateProjectReq struct {
 	Alias    string `json:"alias"`
 	Language string `json:"language"`
 	Version  string `json:"version"`
+	Describe string `json:"describe"`
 	UserID   string `json:"-"`
 }
 
@@ -53,9 +56,8 @@ func (p *project) CreateProject(ctx context.Context, req *CreateProjectReq) (*Cr
 	tx := p.db.Begin()
 	gitHost := p.gitRepo.Get(ctx, tx)
 	if gitHost == nil {
-		// TODO return err
 		tx.Rollback()
-		return nil, nil
+		return nil, error2.New(code.ErrDataNotExist)
 	}
 	client, err := git2.GetClient(git2.Gitlab, gitHost.Token, gitHost.Host)
 	if err != nil {
@@ -74,7 +76,9 @@ func (p *project) CreateProject(ctx context.Context, req *CreateProjectReq) (*Cr
 		ProjectID:   project.ID,
 		ProjectName: project.Name,
 		Alias:       req.Alias,
-		Describe:    project.Description,
+		Describe:    req.Describe,
+		Language:    req.Language,
+		Version:     req.Version,
 		Status:      models.ProjectSuccessStatus,
 		GroupID:     req.GroupID,
 		UserID:      req.UserID,

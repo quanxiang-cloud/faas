@@ -2,10 +2,12 @@ package logic
 
 import (
 	"context"
+	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/id"
 	"github.com/quanxiang-cloud/cabin/time"
 	"github.com/quanxiang-cloud/faas/internal/models"
 	"github.com/quanxiang-cloud/faas/internal/models/mysql"
+	"github.com/quanxiang-cloud/faas/pkg/code"
 	"github.com/quanxiang-cloud/faas/pkg/config"
 	git2 "github.com/quanxiang-cloud/faas/pkg/git"
 	"github.com/quanxiang-cloud/organizations/pkg/client"
@@ -46,9 +48,8 @@ func (u *userSerice) CreateUser(ctx context.Context, req *CreateUserReq) (*Creat
 	tx := u.db.Begin()
 	gitHost := u.gitRepo.Get(ctx, tx)
 	if gitHost == nil {
-		// TODO return git not exist error
 		tx.Rollback()
-		return nil, nil
+		return nil, error2.New(code.ErrDataNotExist)
 	}
 	gitClient, err := git2.GetClient(git2.Gitlab, gitHost.Token, gitHost.Host)
 	if err != nil {
@@ -64,14 +65,12 @@ func (u *userSerice) CreateUser(ctx context.Context, req *CreateUserReq) (*Creat
 	}
 	user, err := gitClient.GetUser(ctx, email2UserName(userInfo.Email))
 	if err != nil {
-		// TODO return user not exist.
 		tx.Rollback()
-		return nil, err
+		return nil, error2.New(code.ErrDataNotExist)
 	}
 	if user.Email != userInfo.Email {
-		// TODO return user not exist.
 		tx.Rollback()
-		return nil, err
+		return nil, error2.New(code.ErrDataNotExist)
 	}
 	err = u.userRepo.Insert(tx, &models.User{
 		ID:        id.StringUUID(),
@@ -106,8 +105,7 @@ type GetUserResp struct {
 func (u *userSerice) GetUser(ctx context.Context, req *GetUserReq) (*GetUserResp, error) {
 	gitHost := u.gitRepo.Get(ctx, u.db)
 	if gitHost == nil {
-		// TODO return git not exist error
-		return nil, nil
+		return nil, error2.New(code.ErrDataNotExist)
 	}
 	user, err := u.userRepo.GetByUserID(u.db, req.UserID)
 	if err != nil {
