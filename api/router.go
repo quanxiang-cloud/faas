@@ -2,6 +2,7 @@ package restful
 
 import (
 	"context"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/olivere/elastic/v7"
 	"github.com/quanxiang-cloud/faas/pkg/k8s"
@@ -37,64 +38,71 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 	}
 
 	v1 := engine.Group("/api/v1/faas")
-	gitAPI := NewGitAPI(ctx, c, db, kc)
-	g := v1.Group("/git")
+
 	{
-		g.POST("/create", gitAPI.Create)
-		g.PUT("/update", gitAPI.Update)
-		g.DELETE("/del", gitAPI.Delete)
-		g.GET("/get", gitAPI.Get)
+		gitAPI := NewGitAPI(ctx, c, db, kc)
+		g := v1.Group("/git")
+		{
+			g.POST("", gitAPI.Create)
+			g.PUT("/:id", gitAPI.Update)
+			g.DELETE("/:id", gitAPI.Delete)
+			g.GET("", gitAPI.Get)
+		}
+		dockerAPI := NewDockerAPI(ctx, c, db, kc)
+		d := v1.Group("/docker")
+		{
+			d.POST("", dockerAPI.Create)
+			d.PUT("/:id", dockerAPI.Update)
+			d.DELETE("/:id", dockerAPI.Delete)
+			d.GET("", dockerAPI.Get)
+		}
+		cm := NewCompoundAPI(ctx, rc)
+		cmGroup := v1.Group("/cm")
+		{
+			cmGroup.POST("/subscribe", cm.Subscribe)
+		}
 	}
-	dockerAPI := NewDockerAPI(ctx, c, db, kc)
-	d := v1.Group("/docker")
 	{
-		d.POST("/create", dockerAPI.Create)
-		d.PUT("/update", dockerAPI.Update)
-		d.DELETE("/del", dockerAPI.Delete)
-		d.GET("/get", dockerAPI.Get)
-	}
-	fnAPI := NewFunctionAPI(ctx, c, db, kc, rc, es)
-	f := v1.Group("/fn")
-	{
-		f.POST("/create", fnAPI.Create)
-		f.POST("/update/status", fnAPI.UpdateStatus)
-		f.DELETE("/del", fnAPI.Delete)
-		f.GET("/get", fnAPI.Get)
-		f.GET("/:resourceRef/logger", fnAPI.ListLog)
+		fnAPI := NewFunctionAPI(ctx, c, db, kc, rc, es)
+		f := v1.Group("/fn")
+		{
+			f.POST("/create", fnAPI.Create)
+			f.POST("/update/status", fnAPI.UpdateStatus)
+			f.DELETE("/del", fnAPI.Delete)
+			f.GET("/get", fnAPI.Get)
+			f.GET("/:resourceRef/logger", fnAPI.ListLog)
+		}
 	}
 
-	cm := NewCompoundAPI(ctx, rc)
-	cmGroup := v1.Group("/cm")
 	{
-		cmGroup.POST("/subscribe", cm.Subscribe)
-	}
-	userAPI := NewUserAPI(ctx, c, db)
-	groupAPI := NewGroupAPI(ctx, c, db)
-	projectAPI := NewProjectAPI(ctx, c, db)
-	user := v1.Group("/user")
-	{
-		user.POST("", userAPI.CreateUser)
-	}
-	group := v1.Group("/group")
-	{
-		group.POST("", groupAPI.Create)
-		group.POST("/:groupID/addmember", groupAPI.BindingGroup)
-		group.POST("/:groupID/project", projectAPI.CreateProject)
-		group.GET("/:groupID/project/list", projectAPI.GetList)
-	}
-	check := v1.Group("/check")
-	{
-		check.GET("/group", groupAPI.CheckGroup)
-		check.GET("/member", groupAPI.CheckMember)
-		check.GET("/developer", userAPI.CheckUser)
-	}
 
-	project := v1.Group("/project")
-	{
-		project.GET("/project/:projectID/info", projectAPI.GetProjectByID)
-		project.PUT("/project/:projectID/updateDesc", projectAPI.UpdDescribe)
-		project.DELETE("/project/:projectID/delete", projectAPI.DelProject)
-		project.GET("/group")
+		userAPI := NewUserAPI(ctx, c, db)
+		groupAPI := NewGroupAPI(ctx, c, db)
+		projectAPI := NewProjectAPI(ctx, c, db)
+		user := v1.Group("/user")
+		{
+			user.POST("", userAPI.CreateUser)
+		}
+		group := v1.Group("/group")
+		{
+			group.POST("", groupAPI.Create)
+			group.POST("/:groupID/member", groupAPI.BindingGroup)
+			group.GET("/:groupID/projects", projectAPI.GetList)
+		}
+		check := v1.Group("/check")
+		{
+			check.GET("/group", groupAPI.CheckGroup)
+			check.GET("/member", groupAPI.CheckMember)
+			check.GET("/developer", userAPI.CheckUser)
+		}
+
+		project := group.Group("/:groupID/project")
+		{
+			project.POST("", projectAPI.CreateProject)
+			project.GET("/:projectID", projectAPI.GetProjectByID)
+			project.PATCH("/:projectID/desc", projectAPI.UpdDescribe)
+			project.DELETE("/:projectID", projectAPI.DelProject)
+		}
 	}
 	{
 		probe := probe.New(util.LoggerFromContext(ctx))
