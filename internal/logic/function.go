@@ -236,10 +236,10 @@ func (g *function) Build(c context.Context, r *BuildFunctionRequest) (*BuildFunc
 		GroupName: group.GroupName,
 		Git: &k8s.Git{
 			Name: gitData.Name,
-			Host: gitData.Host,
+			Host: gitData.KnownHosts,
 		},
 		Docker: &k8s.Docker{
-			NameSpace: g.conf.Docker.NameSpace,
+			NameSpace: dockerData.NameSpace,
 			Name:      dockerData.Name,
 			Host:      dockerData.Host,
 		},
