@@ -5,16 +5,16 @@ env:
   DATE: $(date "+%Y%m%d")
 on: [ push, pull_request ]
 jobs:
-#  lint:
-#    runs-on: self-hosted
-#    steps:
-#      - uses: actions/checkout@v2
-#      - run: golint -set_exit_status $(go list ./... | grep -v /vendor/)
-#  test:
-#    runs-on: self-hosted
-#    steps:
-#      - run: go test ./...
-#      - run: go test -cover ./...
+  lint:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+  #      - run: golint -set_exit_status $(go list ./... | grep -v /vendor/)
+  #  test:
+  #    runs-on: self-hosted
+  #    steps:
+  #      - run: go test ./...
+  #      - run: go test -cover ./...
 
   build_alpha:
     runs-on: self-hosted

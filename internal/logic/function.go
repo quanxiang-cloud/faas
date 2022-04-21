@@ -93,7 +93,9 @@ func (g *function) Create(c context.Context, r *CreateFunctionRequest) (*CreateF
 	if one != nil {
 		return nil, error2.New(code.ErrFunctionExist)
 	}
-	return &CreateFunctionResponse{}, g.functionRepo.Insert(c, g.db, data)
+	return &CreateFunctionResponse{
+		ID: data.ID,
+	}, g.functionRepo.Insert(c, g.db, data)
 }
 
 type UpdateFunctionRequest struct {

@@ -7,7 +7,7 @@ import (
 
 type Function struct {
 	ID          string `gorm:"column:id;type:varchar(64);PRIMARY_KEY" json:"id"`
-	GroupID     string `gorm:"column:group_ID;type:varchar(64);" json:"groupID"`
+	GroupID     string `gorm:"column:group_id;type:varchar(64);" json:"groupID"`
 	ProjectID   string `gorm:"column:project_id;type:varchar(64);" json:"projectID"`
 	Version     string `gorm:"column:version;type:varchar(200);" json:"version"`
 	Language    string `gorm:"column:language;type:varchar(200);" json:"language"`
