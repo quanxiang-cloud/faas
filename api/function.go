@@ -110,7 +110,7 @@ func (f *Function) Get(c *gin.Context) {
 func (b *Function) ListLog(c *gin.Context) {
 	ctx := c.Request.Context()
 	req := &logic.ListlogRequest{
-		BuildID: c.Param("buildID"),
+		ResourceRef: c.Param("resourceRef"),
 	}
 	if err := c.ShouldBind(req); err != nil {
 		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)

@@ -43,7 +43,7 @@ func (f *Git) Create(c *gin.Context) {
 		return
 	}
 	// create git to k8s
-	err = f.k8sc.CreateGitToken(ginheader.MutateContext(c), r.Host, r.Token)
+	err = f.k8sc.CreateGitSSh(ginheader.MutateContext(c), r.Host, r.SSH)
 	if err != nil {
 		resp.Format(res, err).Context(c)
 		return

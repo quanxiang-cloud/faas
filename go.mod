@@ -26,6 +26,8 @@ replace (
 	k8s.io/client-go => k8s.io/client-go v0.23.5
 	k8s.io/klog/v2 => k8s.io/klog/v2 v2.30.0
 	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.11.2
+
+	github.com/quanxiang-cloud/cabin => ../cabin
 )
 
 require (

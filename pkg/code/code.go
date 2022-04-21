@@ -17,6 +17,8 @@ const (
 	ErrDataExist = 90014000003
 	// ErrDataNotExist 数据不存在
 	ErrDataNotExist = 90014000004
+	// ErrFunctionExist 函数已创建
+	ErrFunctionExist = 90014000005
 )
 
 // CodeTable 码表
@@ -26,4 +28,5 @@ var CodeTable = map[int64]string{
 	InvalidTimestamp: "无效的时间格式.",
 	ErrDataExist:     "数据已经存在",
 	ErrDataNotExist:  "数据不存在",
+	ErrFunctionExist: "函数已创建",
 }

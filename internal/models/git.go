@@ -6,10 +6,12 @@ import (
 )
 
 type Git struct {
-	ID    string `gorm:"column:id;type:varchar(64);PRIMARY_KEY" json:"id"`
-	Host  string `gorm:"column:host;type:varchar(200);" json:"host"`
-	Token string `gorm:"column:token;type:text;" json:"token"`
-	Name  string `gorm:"column:name;type:varchar(200);" json:"name"`
+	ID         string `gorm:"column:id;type:varchar(64);PRIMARY_KEY" json:"id"`
+	Host       string `gorm:"column:host;type:varchar(200);" json:"host"`
+	KnownHosts string `gorm:"column:known_hosts;type:text;" json:"knownHosts"`
+	SSH        string `gorm:"column:ssh;type:text;" json:"ssh"`
+	Token      string `gorm:"column:token;type:text;" json:"token"`
+	Name       string `gorm:"column:name;type:varchar(200);" json:"name"`
 
 	CreatedAt int64  `gorm:"column:created_at;type:bigint; " json:"createdAt,omitempty" `
 	UpdatedAt int64  `gorm:"column:updated_at;type:bigint; " json:"updatedAt,omitempty" `

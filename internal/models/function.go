@@ -6,13 +6,15 @@ import (
 )
 
 type Function struct {
-	ID        string `gorm:"column:id;type:varchar(64);PRIMARY_KEY" json:"id"`
-	GroupName string `gorm:"column:group_name;type:varchar(200);" json:"groupName"`
-	Project   string `gorm:"column:project;type:varchar(200);" json:"project"`
-	Version   string `gorm:"column:version;type:varchar(200);" json:"version"`
-	Language  string `gorm:"column:language;type:varchar(200);" json:"language"`
-	Status    int    `gorm:"column:status;type:varchar(200);" json:"status"`
-	Env       string `gorm:"column:env;type:text;" json:"env"`
+	ID          string `gorm:"column:id;type:varchar(64);PRIMARY_KEY" json:"id"`
+	GroupName   string `gorm:"column:group_name;type:varchar(200);" json:"groupName"`
+	Project     string `gorm:"column:project;type:varchar(200);" json:"project"`
+	Version     string `gorm:"column:version;type:varchar(200);" json:"version"`
+	Language    string `gorm:"column:language;type:varchar(200);" json:"language"`
+	Status      int    `gorm:"column:status;type:varchar(200);" json:"status"`
+	Env         string `gorm:"column:env;type:text;" json:"env"`
+	ResourceRef string `gorm:"column:resource_ref;type:varchar(200);" json:"resourceRef"`
+	Name        string `gorm:"column:name;type:varchar(200);" json:"name"`
 
 	CreatedAt int64  `gorm:"column:created_at;type:bigint; " json:"createdAt,omitempty" `
 	UpdatedAt int64  `gorm:"column:updated_at;type:bigint; " json:"updatedAt,omitempty" `
@@ -33,4 +35,6 @@ type FunctionRepo interface {
 	Update(ctx context.Context, tx *gorm.DB, data *Function) error
 	Delete(ctx context.Context, tx *gorm.DB, id ...string) error
 	Get(ctx context.Context, db *gorm.DB, id string) *Function
+	GetByName(ctx context.Context, db *gorm.DB, name string) *Function
+	GetByResourceRef(ctx context.Context, db *gorm.DB, resourceRef string) *Function
 }
