@@ -260,7 +260,7 @@ func (c *client) DelFunction(ctx context.Context, data *DelFunction) error {
 func (c *client) CreateServing(ctx context.Context, fn *Function) error {
 	ksvc := &ksvc.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      genName(fn, true),
+			Name:      GenName(fn, true),
 			Namespace: c.k8sNamespace,
 		},
 		Spec: ksvc.ServiceSpec{
@@ -292,7 +292,7 @@ func (c *client) CreateServing(ctx context.Context, fn *Function) error {
 
 func (c *client) DelServing(ctx context.Context, fn *Function) error {
 	return c.serving.Delete(ctx,
-		genName(fn, true),
+		GenName(fn, true),
 		metav1.DeleteOptions{})
 }
 
@@ -307,7 +307,7 @@ func genEnv(c *client, fn *Function) []v1.EnvVar {
 	env = append(env,
 		v1.EnvVar{
 			Name:  "FUNC_CONTEXT",
-			Value: fmt.Sprintf("{\"name\":\"%s\",\"version\":\"v2.0.0\",\"runtime\":\"Knative\",\"port\":\"8080\"}", genName(fn, true)),
+			Value: fmt.Sprintf("{\"name\":\"%s\",\"version\":\"v2.0.0\",\"runtime\":\"Knative\",\"port\":\"8080\"}", GenName(fn, true)),
 		},
 		v1.EnvVar{
 			Name: "POD_NAME",
@@ -326,7 +326,7 @@ func genEnv(c *client, fn *Function) []v1.EnvVar {
 	return env
 }
 
-func genName(fn *Function, reverse bool, prefix ...string) (ret string) {
+func GenName(fn *Function, reverse bool, prefix ...string) (ret string) {
 	template := "%s-%s-%s"
 	if len(prefix) != 0 {
 		template = prefix[0] + template
@@ -341,6 +341,18 @@ func genName(fn *Function, reverse bool, prefix ...string) (ret string) {
 	return
 }
 
+func ReverseName(name string) (string, error) {
+	first := strings.Index(name, "-")
+	if first == -1 {
+		return name, fmt.Errorf("invalid name")
+	}
+	last := strings.LastIndex(name, "-")
+	if first != last {
+		return fmt.Sprintf("%s-%s-%s", name[last+1:], name[first+1:last], name[:first]), nil
+	}
+	return fmt.Sprintf("%s-%s", name[last+1:], name[:first]), nil
+}
+
 // TODO: check host
 func genGitRepo(fn *Function) string {
 	host, group, project := fn.Git.Host, fn.GroupName, fn.Project
@@ -353,7 +365,7 @@ func genGitRepo(fn *Function) string {
 func (c *client) RegistAPI(ctx context.Context, fn *Function) error {
 	pipeRun := &pipeline.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: genName(fn, true, "register-api-"),
+			Name: GenName(fn, true),
 		},
 		Spec: pipeline.PipelineRunSpec{
 			PipelineRef: &pipeline.PipelineRef{
@@ -370,11 +382,11 @@ func (c *client) RegistAPI(ctx context.Context, fn *Function) error {
 				},
 				{
 					Name:  "OPERATE_ID",
-					Value: *pipeline.NewArrayOrString(genName(fn, false)),
+					Value: *pipeline.NewArrayOrString(GenName(fn, false)),
 				},
 				{
 					Name:  "HOST",
-					Value: *pipeline.NewArrayOrString(genName(fn, true)),
+					Value: *pipeline.NewArrayOrString(GenName(fn, true)),
 				},
 			},
 			ServiceAccountName: "builder",

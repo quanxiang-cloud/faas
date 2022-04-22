@@ -2,6 +2,7 @@ package k8s
 
 import (
 	"context"
+	"fmt"
 	"testing"
 )
 
@@ -141,5 +142,22 @@ func TestRegister(t *testing.T) {
 	err := c.RegistAPI(ctx, function)
 	if err != nil {
 		panic(err)
+	}
+}
+
+func TestReverse(t *testing.T) {
+	testCase := []string{
+		"a-b-c",
+		"a-b-c-",
+		"-a-b-c",
+		"a-b",
+	}
+
+	for index, val := range testCase {
+		ret, err := reverseName(val)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("case %d: %s\n", index, ret)
 	}
 }

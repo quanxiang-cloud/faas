@@ -3,6 +3,7 @@ package logic
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"time"
 
@@ -415,4 +416,39 @@ func (g *function) RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerR
 		},
 	})
 	return &RegSwaggerResp{}, err
+}
+
+type UpdateDocReq struct {
+	Name   string `json:"name"`
+	Status string `json:"state"`
+	Topic  string `json:"topic"`
+}
+
+type UpdateDocResp struct {
+}
+
+func (g *function) UpdateDoc(c context.Context, req *UpdateDocReq) (*UpdateDocResp, error) {
+	name, err := k8s.ReverseName(req.Name)
+	if err != nil {
+		return nil, err
+	}
+	fn := g.functionRepo.GetByName(c, g.db, name)
+	if fn == nil {
+		return nil, fmt.Errorf("can not find function(%s)", name)
+	}
+
+	// TODO:
+	if req.Status == "Succeeded" {
+		if err := g.k8sc.DeleteReigstRun(c, req.Name); err != nil {
+			return nil, err
+		}
+		// TODO:
+		fn.Doc = 1
+	}
+
+	if err := g.functionRepo.Update(c, g.db, fn); err != nil {
+		return nil, err
+	}
+
+	return &UpdateDocResp{}, nil
 }
