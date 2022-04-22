@@ -3,6 +3,10 @@ package logic
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"strings"
+	"time"
+
 	"github.com/olivere/elastic/v7"
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/id"
@@ -14,8 +18,6 @@ import (
 	"github.com/quanxiang-cloud/faas/pkg/config"
 	"github.com/quanxiang-cloud/faas/pkg/k8s"
 	"gorm.io/gorm"
-	"strings"
-	"time"
 )
 
 type Function interface {
@@ -28,6 +30,9 @@ type Function interface {
 	DelFunction(c context.Context, r *DelBuildFunctionRequest) (*DelBuildFunctionResponse, error)
 	ListLog(c context.Context, r *ListlogRequest) (*ListLogResponse, error)
 	List(c context.Context, r *ListRequest) (*ListResponse, error)
+
+	RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerResp, error)
+	UpdateDoc(c context.Context, req *UpdateDocReq) (*UpdateDocResp, error)
 }
 
 type function struct {
@@ -120,6 +125,9 @@ const (
 	StatusFailed
 	StatusOK
 	StatusCancelled
+
+	StatusOnline
+	StatusOffline
 )
 
 var result = map[string]int{
@@ -370,5 +378,84 @@ func (g *function) List(c context.Context, r *ListRequest) (*ListResponse, error
 	return &ListResponse{
 		Data:  res,
 		Count: count,
+	}, nil
+}
+
+type RegSwaggerReq struct {
+	ID string `json:"id"`
+}
+
+type RegSwaggerResp struct {
+}
+
+func (g *function) RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerResp, error) {
+	fn := g.functionRepo.Get(c, g.db, r.ID)
+	if fn.Status != int(StatusOK) {
+		return nil, error2.New(code.ErrDataIllegal)
+	}
+
+	project, err := g.projectRepo.Get(g.db, fn.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	group, err := g.groupRepo.Get(g.db, fn.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	git := g.gitRepo.Get(c, g.db)
+
+	// TODO: credentials
+	err = g.k8sc.RegistAPI(c, &k8s.Function{
+		Version:   fn.Version,
+		Project:   project.ProjectName,
+		GroupName: group.GroupName,
+		Git: &k8s.Git{
+			Name: git.Name,
+			Host: git.KnownHosts,
+		},
+	})
+	return &RegSwaggerResp{}, err
+}
+
+type UpdateDocReq struct {
+	Name   string `json:"name"`
+	Status string `json:"state"`
+	Topic  string `json:"topic"`
+}
+
+type UpdateDocResp struct {
+	ID    string `json:"id"`
+	Topic string `json:"topic"`
+}
+
+func (g *function) UpdateDoc(c context.Context, req *UpdateDocReq) (*UpdateDocResp, error) {
+	name, err := k8s.ReverseName(req.Name)
+	if err != nil {
+		return nil, err
+	}
+	fn := g.functionRepo.GetByName(c, g.db, name)
+	if fn == nil {
+		return nil, fmt.Errorf("can not find function(%s)", name)
+	}
+
+	// TODO: ???
+	fn.Doc = 0
+	if req.Status == "Succeeded" {
+		fn.Doc = 1
+	}
+
+	if err := g.k8sc.DeleteReigstRun(c, req.Name); err != nil {
+		return nil, err
+	}
+
+	if err := g.functionRepo.Update(c, g.db, fn); err != nil {
+		return nil, err
+	}
+
+	return &UpdateDocResp{
+		ID:    fn.ID,
+		Topic: req.Topic,
 	}, nil
 }

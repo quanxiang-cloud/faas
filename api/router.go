@@ -2,6 +2,7 @@ package restful
 
 import (
 	"context"
+
 	elastic2 "github.com/quanxiang-cloud/cabin/tailormade/db/elastic"
 	mysql2 "github.com/quanxiang-cloud/cabin/tailormade/db/mysql"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
@@ -43,7 +44,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 	if err != nil {
 		return nil, err
 	}
-	k8sClient, err := k8s.NewClient(c.K8s.NameSpace)
+	k8sClient := k8s.NewClient(c.K8s.NameSpace)
 
 	engine, err := newRouter(c)
 	if err != nil {
@@ -75,7 +76,6 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 			cmGroup.POST("/subscribe", cm.Subscribe)
 		}
 	}
-
 	{
 
 		userAPI := NewUserAPI(ctx, c, db)
@@ -113,13 +113,18 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 		{
 			f.POST("/create", fnAPI.Create)
 			f.POST("/update/status", fnAPI.UpdateStatus)
+			f.POST("/update/doc", fnAPI.UpdateDoc)
 			f.DELETE("/del", fnAPI.Delete)
 			f.GET("/get", fnAPI.Get)
 			f.GET("/logger/:resourceRef", fnAPI.ListLog)
 			f.GET("/list/:projectID", fnAPI.List)
 		}
+		svcApi := NewServing(db, c, k8sClient)
+		{
+			f.POST("/serve", svcApi.serve)
+			f.DELETE("/offline", svcApi.offline)
+		}
 	}
-
 	{
 		probe := probe.New(log)
 		engine.GET("liveness", func(c *gin.Context) {

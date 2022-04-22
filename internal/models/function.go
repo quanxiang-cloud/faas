@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+
 	"gorm.io/gorm"
 )
 
@@ -12,6 +13,7 @@ type Function struct {
 	Version     string `gorm:"column:version;type:varchar(200);" json:"version"`
 	Language    string `gorm:"column:language;type:varchar(200);" json:"language"`
 	Status      int    `gorm:"column:status;type:varchar(200);" json:"status"`
+	Doc         int    `json:"doc"`
 	Env         string `gorm:"column:env;type:text;" json:"env"`
 	ResourceRef string `gorm:"column:resource_ref;type:varchar(200);" json:"resourceRef"`
 	Name        string `gorm:"column:name;type:varchar(200);" json:"name"`

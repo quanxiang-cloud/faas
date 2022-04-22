@@ -5,6 +5,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/openfunction/apis/core/v1beta1"
 	"github.com/openfunction/pkg/client/clientset/versioned"
 	ginheader "github.com/quanxiang-cloud/cabin/tailormade/header"
@@ -12,9 +15,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/utils/pointer"
+
+	pipeline "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1beta1"
+	tektonClient "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
+	ksvc "knative.dev/serving/pkg/apis/serving/v1"
+	serving "knative.dev/serving/pkg/client/clientset/versioned/typed/serving/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"strings"
-	"time"
 )
 
 // Client Client
@@ -24,17 +30,23 @@ type Client interface {
 	CreateDocker(ctx context.Context, host, username, secret string) error
 	Build(ctx context.Context, data *Function) error
 	DelFunction(ctx context.Context, data *DelFunction) error
+	CreateServing(ctx context.Context, fn *Function) error
+	DelServing(ctx context.Context, fn *Function) error
+	RegistAPI(ctx context.Context, fn *Function) error
+	DeleteReigstRun(ctx context.Context, name string) error
 }
 
 type client struct {
 	client          *kubernetes.Clientset
+	tekton          *tektonClient.Clientset
 	ofn             versioned.Interface
+	serving         serving.ServiceInterface
 	k8sNamespace    string
 	dockerNamespace string
 }
 
 // NewClient NewClient
-func NewClient(namespace string) (Client, error) {
+func NewClient(namespace string) Client {
 	config := ctrl.GetConfigOrDie()
 	clientset := kubernetes.NewForConfigOrDie(config)
 	ofn := versioned.NewForConfigOrDie(config)
@@ -42,7 +54,9 @@ func NewClient(namespace string) (Client, error) {
 		client:       clientset,
 		k8sNamespace: namespace,
 		ofn:          ofn,
-	}, nil
+		serving:      serving.NewForConfigOrDie(config).Services(namespace),
+		tekton:       tektonClient.NewForConfigOrDie(config),
+	}
 }
 
 // UnexpectedType UnexpectedType
@@ -241,4 +255,153 @@ type DelFunction struct {
 func (c *client) DelFunction(ctx context.Context, data *DelFunction) error {
 	fn := c.ofn.CoreV1beta1().Functions(c.k8sNamespace)
 	return fn.Delete(ctx, data.Name, metav1.DeleteOptions{})
+}
+
+func (c *client) CreateServing(ctx context.Context, fn *Function) error {
+	ksvc := &ksvc.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      GenName(fn, true),
+			Namespace: c.k8sNamespace,
+		},
+		Spec: ksvc.ServiceSpec{
+			ConfigurationSpec: ksvc.ConfigurationSpec{
+				Template: ksvc.RevisionTemplateSpec{
+					Spec: ksvc.RevisionSpec{
+						PodSpec: v1.PodSpec{
+							ImagePullSecrets: []v1.LocalObjectReference{
+								{Name: fn.Docker.Name},
+							},
+							Containers: []v1.Container{{
+								Name:  "serving",
+								Image: fn.Docker.Host + fn.Docker.NameSpace + strings.ToLower(fn.GroupName) + "-" + fn.Project + ":" + fn.Version,
+								Ports: []v1.ContainerPort{{
+									ContainerPort: 8080,
+								}},
+								Env: genEnv(c, fn),
+							}},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	_, err := c.serving.Create(ctx, ksvc, metav1.CreateOptions{})
+	return err
+}
+
+func (c *client) DelServing(ctx context.Context, fn *Function) error {
+	return c.serving.Delete(ctx,
+		GenName(fn, true),
+		metav1.DeleteOptions{})
+}
+
+func genEnv(c *client, fn *Function) []v1.EnvVar {
+	env := make([]v1.EnvVar, 0, len(fn.ENV))
+	for k, v := range fn.ENV {
+		env = append(env, v1.EnvVar{
+			Name:  k,
+			Value: v,
+		})
+	}
+	env = append(env,
+		v1.EnvVar{
+			Name:  "FUNC_CONTEXT",
+			Value: fmt.Sprintf("{\"name\":\"%s\",\"version\":\"v2.0.0\",\"runtime\":\"Knative\",\"port\":\"8080\"}", GenName(fn, true)),
+		},
+		v1.EnvVar{
+			Name: "POD_NAME",
+			ValueFrom: &v1.EnvVarSource{
+				FieldRef: &v1.ObjectFieldSelector{
+					APIVersion: "v1",
+					FieldPath:  "metadata.name",
+				},
+			},
+		},
+		v1.EnvVar{
+			Name:  "POD_NAMESPACE",
+			Value: c.k8sNamespace,
+		})
+
+	return env
+}
+
+func GenName(fn *Function, reverse bool, prefix ...string) (ret string) {
+	template := "%s-%s-%s"
+	if len(prefix) != 0 {
+		template = prefix[0] + template
+	}
+
+	if !reverse {
+		ret = fmt.Sprintf(template, fn.GroupName, fn.Project, fn.Version)
+	} else {
+		ret = fmt.Sprintf(template, fn.Version, fn.Project, fn.GroupName)
+	}
+	ret = strings.ToLower(ret)
+	return
+}
+
+func ReverseName(name string) (string, error) {
+	first := strings.Index(name, "-")
+	if first == -1 {
+		return name, fmt.Errorf("invalid name")
+	}
+	last := strings.LastIndex(name, "-")
+	if first != last {
+		return fmt.Sprintf("%s-%s-%s", name[last+1:], name[first+1:last], name[:first]), nil
+	}
+	return fmt.Sprintf("%s-%s", name[last+1:], name[:first]), nil
+}
+
+// TODO: check host
+func genGitRepo(fn *Function) string {
+	host, group, project := fn.Git.Host, fn.GroupName, fn.Project
+	if index := strings.LastIndex(host, "/"); index == len(host) {
+		host = host[:index]
+	}
+	return fmt.Sprintf("%s/%s/%s.git", host, group, project)
+}
+
+func (c *client) RegistAPI(ctx context.Context, fn *Function) error {
+	pipeRun := &pipeline.PipelineRun{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: GenName(fn, true),
+		},
+		Spec: pipeline.PipelineRunSpec{
+			PipelineRef: &pipeline.PipelineRef{
+				Name: "register-polyapi",
+			},
+			Params: []pipeline.Param{
+				{
+					Name:  "SOURCE_URL",
+					Value: *pipeline.NewArrayOrString(genGitRepo(fn)),
+				},
+				{
+					Name:  "PROJECT_NAME",
+					Value: *pipeline.NewArrayOrString(fn.Project),
+				},
+				{
+					Name:  "OPERATE_ID",
+					Value: *pipeline.NewArrayOrString(GenName(fn, false)),
+				},
+				{
+					Name:  "HOST",
+					Value: *pipeline.NewArrayOrString(GenName(fn, true)),
+				},
+			},
+			ServiceAccountName: "builder",
+			Workspaces: []pipeline.WorkspaceBinding{
+				{
+					Name:     "source-ws",
+					EmptyDir: &v1.EmptyDirVolumeSource{},
+				},
+			},
+		},
+	}
+	_, err := c.tekton.TektonV1beta1().PipelineRuns(c.k8sNamespace).Create(ctx, pipeRun, metav1.CreateOptions{})
+	return err
+}
+
+func (c *client) DeleteReigstRun(ctx context.Context, name string) error {
+	return c.tekton.TektonV1beta1().PipelineRuns(c.k8sNamespace).Delete(ctx, name, metav1.DeleteOptions{})
 }
