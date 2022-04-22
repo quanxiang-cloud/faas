@@ -57,10 +57,10 @@ func NewFunction(c context.Context, db *gorm.DB, conf config.Config, kc k8s.Clie
 }
 
 type CreateFunctionRequest struct {
-	GroupID   string            `json:"groupID"`
-	ProjectID string            `json:"projectID"`
-	Version   string            `json:"version"`
-	Language  string            `json:"language"`
+	GroupID   string            `json:"groupID"  form:"groupID" uri:"groupID"`
+	ProjectID string            `json:"projectID" form:"projectID" uri:"projectID"`
+	Version   string            `json:"version" form:"version" uri:"version"`
+	Language  string            `json:"language" form:"language" uri:"language"`
 	Env       map[string]string `json:"env"`
 }
 type CreateFunctionResponse struct {

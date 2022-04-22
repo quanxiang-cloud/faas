@@ -109,14 +109,14 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 			project.DELETE("/:projectID", projectAPI.DelProject)
 		}
 		fnAPI := NewFunctionAPI(ctx, c, db, k8sClient, redisClient, esClient)
-		f := group.Group("/fn")
+		f := project.Group("")
 		{
 			f.POST("/create", fnAPI.Create)
 			f.POST("/update/status", fnAPI.UpdateStatus)
 			f.DELETE("/del", fnAPI.Delete)
 			f.GET("/get", fnAPI.Get)
-			f.GET("/:resourceRef/logger", fnAPI.ListLog)
-			f.GET("/list/:page/:limit/:groupID/:projectID", fnAPI.List)
+			f.GET("/logger/:resourceRef", fnAPI.ListLog)
+			f.GET("/list/:projectID", fnAPI.List)
 		}
 	}
 

@@ -32,7 +32,9 @@ func NewFunctionAPI(c context.Context, conf *config.Config, db *gorm.DB, kc k8s.
 
 // Create create
 func (f *Function) Create(c *gin.Context) {
-	r := &logic.CreateFunctionRequest{}
+	r := &logic.CreateFunctionRequest{
+		GroupID: c.Param("groupID"),
+	}
 	err := c.ShouldBind(r)
 	if err != nil {
 		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
@@ -123,8 +125,11 @@ func (f *Function) ListLog(c *gin.Context) {
 // List List
 func (f *Function) List(c *gin.Context) {
 	ctx := c.Request.Context()
-	req := &logic.ListRequest{}
-	if err := c.ShouldBindUri(req); err != nil {
+	req := &logic.ListRequest{
+		GroupID:   c.Param("groupID"),
+		ProjectID: c.Param("projectID"),
+	}
+	if err := c.ShouldBind(req); err != nil {
 		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
 		return
 	}
