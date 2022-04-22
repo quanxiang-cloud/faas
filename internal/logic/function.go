@@ -27,6 +27,7 @@ type Function interface {
 	Build(c context.Context, r *BuildFunctionRequest) (*BuildFunctionResponse, error)
 	DelFunction(c context.Context, r *DelBuildFunctionRequest) (*DelBuildFunctionResponse, error)
 	ListLog(c context.Context, r *ListlogRequest) (*ListLogResponse, error)
+	List(c context.Context, r *ListRequest) (*ListResponse, error)
 }
 
 type function struct {
@@ -280,6 +281,7 @@ func (g *function) DelFunction(c context.Context, r *DelBuildFunctionRequest) (*
 
 type ListlogRequest struct {
 	ResourceRef string `json:"resourceRef" form:"resourceRef" uri:"resourceRef"`
+	Step        string `json:"step" form:"step" uri:"step"`
 	Index       int    `json:"index" form:"index"`
 	Timestamp   int64  `json:"timestamp" form:"timestamp"`
 }
@@ -295,7 +297,7 @@ func (g *function) ListLog(c context.Context, r *ListlogRequest) (*ListLogRespon
 	}
 
 	t := time.Unix(r.Timestamp, 0)
-	fullLogs, count, err := g.buildLogRepo.Search(c, r.ResourceRef, t, r.Index, 5)
+	fullLogs, count, err := g.buildLogRepo.Search(c, r.ResourceRef, r.Step, t, r.Index, 100)
 	if err != nil {
 		return nil, err
 	}
@@ -304,14 +306,69 @@ func (g *function) ListLog(c context.Context, r *ListlogRequest) (*ListLogRespon
 	for _, e := range fullLogs {
 		logs = append(logs, &models.LogVO{
 			Run:       e.Labels.PipelineTask,
-			Step:      e.Labels.Task,
+			Step:      e.ContainerName,
 			Log:       e.Log,
 			Timestamp: e.Time.Unix(),
+			PodName:   e.PodName,
 		})
 	}
 
 	return &ListLogResponse{
 		Logs:  logs,
+		Count: count,
+	}, nil
+}
+
+type ListRequest struct {
+	Page      int    `json:"page" form:"page" uri:"page"`
+	Limit     int    `json:"limit" form:"limit" uri:"limit"`
+	GroupID   string `json:"groupID" form:"groupID"  uri:"groupID"`
+	ProjectID string `json:"projectID" form:"projectID" uri:"projectID"`
+}
+type ListResponse struct {
+	Data  []RespFunction `json:"data"`
+	Count int64          `json:"count"`
+}
+
+type RespFunction struct {
+	ID          string `json:"id"`
+	GroupID     string `json:"groupID"`
+	ProjectID   string `json:"projectID"`
+	Version     string `json:"version"`
+	Language    string `json:"language"`
+	Status      int    `json:"status"`
+	Env         string `json:"env"`
+	ResourceRef string `json:"resourceRef"`
+	Name        string ` json:"name"`
+
+	CreatedAt int64  `json:"createdAt,omitempty" `
+	CreatedBy string `json:"createdBy,omitempty"` //创建者
+}
+
+func (g *function) List(c context.Context, r *ListRequest) (*ListResponse, error) {
+	fns, count := g.functionRepo.Search(c, g.db, r.ProjectID, r.GroupID, r.Page, r.Limit)
+	if len(fns) == 0 {
+		return nil, error2.New(code.ErrDataNotExist)
+	}
+
+	res := make([]RespFunction, 0, len(fns))
+	for k := range fns {
+		res = append(res, RespFunction{
+			ID:          fns[k].ID,
+			GroupID:     fns[k].GroupID,
+			ProjectID:   fns[k].ProjectID,
+			Version:     fns[k].Version,
+			Language:    fns[k].Language,
+			Status:      fns[k].Status,
+			Env:         fns[k].Env,
+			ResourceRef: fns[k].ResourceRef,
+			Name:        fns[k].Name,
+		})
+
+	}
+
+	return &ListResponse{
+		Data:  res,
 		Count: count,
 	}, nil
 }

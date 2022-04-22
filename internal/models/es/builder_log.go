@@ -25,14 +25,17 @@ func (b *builderLogRepo) index() string {
 	return "builder*"
 }
 
-func (b *builderLogRepo) Search(ctx context.Context, ID string, time time.Time,
+func (b *builderLogRepo) Search(ctx context.Context, id, step string, time time.Time,
 	page, size int) ([]*models.BuilderLog, int64, error) {
 	query := elastic.NewBoolQuery()
 
 	boolQuery := make([]elastic.Query, 0, 2)
+	if step != "" {
+		boolQuery = append(boolQuery, elastic.NewTermQuery(k8s.STEP+".keyword", step))
+	}
 	boolQuery = append(
 		boolQuery,
-		elastic.NewMatchQuery(k8s.RESOURCRREF, ID),
+		elastic.NewMatchPhrasePrefixQuery(k8s.RESOURCRREF, id),
 		elastic.NewRangeQuery("time").Gte(time.UTC()),
 	)
 

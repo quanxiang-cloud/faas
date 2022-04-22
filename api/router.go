@@ -71,6 +71,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 			f.DELETE("/del", fnAPI.Delete)
 			f.GET("/get", fnAPI.Get)
 			f.GET("/:resourceRef/logger", fnAPI.ListLog)
+			f.GET("/list/:page/:limit/:groupID/:projectID", fnAPI.List)
 		}
 	}
 
