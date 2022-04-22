@@ -15,6 +15,8 @@ type GIT interface {
 
 	CreateGroup(ctx context.Context, name, path string) (*define.Group, error)
 	GetGroupByName(ctx context.Context, name string) (*define.Group, error)
+	GetGroupByID(ctx context.Context, gid int) (*define.Group, error)
+	ListGroup(ctx context.Context) ([]*define.Group, error)
 	AddGroupMember(ctx context.Context, gid, userID int) error
 	RemoveGroupMember(ctx context.Context, gid, userID int) error
 

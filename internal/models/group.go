@@ -12,6 +12,7 @@ type Group struct {
 	CreatedBy string
 	UpdatedBy string
 	DeletedBy string
+	AppID     string
 }
 
 type GroupRepo interface {

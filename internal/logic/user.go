@@ -38,7 +38,8 @@ func NewUserService(ctx context.Context, db *gorm.DB, conf *config.Config) UserS
 }
 
 type CreateUserReq struct {
-	UserID string `json:"-"`
+	Account string `json:"Account"`
+	UserID  string `json:"-"`
 }
 
 type CreateUserResp struct {
@@ -56,26 +57,15 @@ func (u *userSerice) CreateUser(ctx context.Context, req *CreateUserReq) (*Creat
 		tx.Rollback()
 		return nil, err
 	}
-	userInfo, err := u.userClient.GetUserInfo(ctx, &client.OneUserRequest{
-		ID: req.UserID,
-	})
+	user, err := gitClient.GetUser(ctx, req.Account)
 	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-	user, err := gitClient.GetUser(ctx, email2UserName(userInfo.Email))
-	if err != nil {
-		tx.Rollback()
-		return nil, error2.New(code.ErrDataNotExist)
-	}
-	if user.Email != userInfo.Email {
 		tx.Rollback()
 		return nil, error2.New(code.ErrDataNotExist)
 	}
 	err = u.userRepo.Insert(tx, &models.User{
 		ID:        id.StringUUID(),
 		UserID:    req.UserID,
-		GitName:   userInfo.Name,
+		GitName:   req.Account,
 		GitID:     user.ID,
 		CreatedAt: time.NowUnix(),
 		UpdatedAt: time.NowUnix(),

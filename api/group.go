@@ -36,9 +36,9 @@ func (g *GroupAPI) Create(c *gin.Context) {
 	resp.Format(g.groupService.CreateGroup(ctx, req)).Context(c)
 }
 
-// BindingGroup BindingGroup
-func (g *GroupAPI) BindingGroup(c *gin.Context) {
-	req := &logic.BindingGroupReq{}
+// AddMember AddMember
+func (g *GroupAPI) AddMember(c *gin.Context) {
+	req := &logic.AddGroupMemberReq{}
 	if err := c.ShouldBind(req); err != nil {
 		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
 		return
@@ -46,7 +46,7 @@ func (g *GroupAPI) BindingGroup(c *gin.Context) {
 	req.GroupID = c.Param("groupID")
 	req.UserID = c.GetHeader(_userID)
 	ctx := ginheader.MutateContext(c)
-	resp.Format(g.groupService.BindingGroup(ctx, req)).Context(c)
+	resp.Format(g.groupService.AddGroupMember(ctx, req)).Context(c)
 }
 
 // CheckGroup CheckGroup
@@ -70,4 +70,27 @@ func (g *GroupAPI) CheckMember(c *gin.Context) {
 	req.UserID = c.GetHeader(_userID)
 	ctx := ginheader.MutateContext(c)
 	resp.Format(g.groupService.CheckMember(ctx, req)).Context(c)
+}
+
+// BindGroup BindGroup
+func (g *GroupAPI) BindGroup(c *gin.Context) {
+	req := &logic.BindGroupReq{}
+	if err := c.ShouldBind(req); err != nil {
+		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
+		return
+	}
+	req.UserID = c.GetHeader(_userID)
+	ctx := ginheader.MutateContext(c)
+	resp.Format(g.groupService.BindGroup(ctx, req)).Context(c)
+}
+
+// ListGroup ListGroup
+func (g *GroupAPI) ListGroup(c *gin.Context) {
+	req := &logic.ListGroupReq{}
+	if err := c.ShouldBind(req); err != nil {
+		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
+		return
+	}
+	ctx := ginheader.MutateContext(c)
+	resp.Format(g.groupService.ListGroup(ctx, req)).Context(c)
 }

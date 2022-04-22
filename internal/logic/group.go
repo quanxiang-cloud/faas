@@ -15,9 +15,11 @@ import (
 
 type GroupService interface {
 	CreateGroup(ctx context.Context, req *CreateGroupReq) (*CreateGroupResp, error)
-	BindingGroup(ctx context.Context, req *BindingGroupReq) (*BindingGroupResp, error)
+	AddGroupMember(ctx context.Context, req *AddGroupMemberReq) (*AddGroupMemberResp, error)
 	CheckGroup(ctx context.Context, req *CheckGroupReq) (*CheckGroupResp, error)
 	CheckMember(ctx context.Context, req *CheckMemberReq) (*CheckMemberResp, error)
+	BindGroup(ctx context.Context, req *BindGroupReq) (*BindGroupResp, error)
+	ListGroup(ctx context.Context, req *ListGroupReq) (*ListGroupResp, error)
 }
 
 type groupService struct {
@@ -38,12 +40,15 @@ func NewGroupService(ctx context.Context, db *gorm.DB, conf *config.Config) Grou
 	}
 }
 
+// CreateGroupReq CreateGroupReq
 type CreateGroupReq struct {
-	AppID  string `json:"appID"`
-	Group  string `json:"group"`
-	UserID string `json:"-"`
+	AppID    string `json:"appID"`
+	Group    string `json:"group"`
+	Describe string `json:"describe"`
+	UserID   string `json:"-"`
 }
 
+// CreateGroupResp CreateGroupResp
 type CreateGroupResp struct {
 	GroupID string `json:"groupID"`
 }
@@ -62,53 +67,46 @@ func (g *groupService) CreateGroup(ctx context.Context, req *CreateGroupReq) (*C
 		tx.Rollback()
 		return nil, err
 	}
-
 	// create the group
 	group, err := client.CreateGroup(ctx, req.Group, req.Group)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
 	}
-	groupInfo, err := g.groupRepo.GetByName(tx, req.Group)
+	groupInfo := &models.Group{
+		ID:        id.StringUUID(),
+		GroupName: group.Name,
+		GroupID:   group.ID,
+		Describe:  req.Describe,
+		AppID:     req.AppID,
+		CreatedBy: req.UserID,
+		UpdatedBy: req.UserID,
+		CreatedAt: time.NowUnix(),
+		UpdatedAt: time.NowUnix(),
+	}
+	// group information is stored
+	err = g.groupRepo.Insert(tx, groupInfo)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
 	}
-	groupID := groupInfo.ID
-	if groupInfo == nil {
-		groupID = id.StringUUID()
-		// group information is stored
-		err = g.groupRepo.Insert(tx, &models.Group{
-			ID:        groupID,
-			GroupName: group.Name,
-			GroupID:   group.ID,
-			Describe:  group.Description,
-			CreatedBy: req.UserID,
-			UpdatedBy: req.UserID,
-			CreatedAt: time.NowUnix(),
-			UpdatedAt: time.NowUnix(),
-		})
-		if err != nil {
-			tx.Rollback()
-			return nil, err
-		}
-	}
 	tx.Commit()
 	return &CreateGroupResp{
-		GroupID: groupID,
+		GroupID: groupInfo.ID,
 	}, nil
 }
 
-// BindingGroupReq BindingGroupReq
-type BindingGroupReq struct {
+// AddGroupMemberReq AddGroupMemberReq
+type AddGroupMemberReq struct {
 	UserID  string `json:"-"`
 	GroupID string `json:"-"`
 }
 
-type BindingGroupResp struct {
+// AddGroupMemberResp AddGroupMemberResp
+type AddGroupMemberResp struct {
 }
 
-func (g *groupService) BindingGroup(ctx context.Context, req *BindingGroupReq) (*BindingGroupResp, error) {
+func (g *groupService) AddGroupMember(ctx context.Context, req *AddGroupMemberReq) (*AddGroupMemberResp, error) {
 	tx := g.db.Begin()
 	gitHost := g.gitRepo.Get(ctx, tx)
 	if gitHost == nil {
@@ -151,7 +149,7 @@ func (g *groupService) BindingGroup(ctx context.Context, req *BindingGroupReq) (
 		return nil, err
 	}
 	tx.Commit()
-	return &BindingGroupResp{}, nil
+	return &AddGroupMemberResp{}, nil
 }
 
 type CheckGroupReq struct {
@@ -208,4 +206,101 @@ func (g *groupService) CheckMember(ctx context.Context, req *CheckMemberReq) (*C
 	return &CheckMemberResp{
 		IsMember: true,
 	}, nil
+}
+
+// BindGroupReq BindGroupReq
+type BindGroupReq struct {
+	GID      int    `json:"gid"`
+	Group    string `json:"group"`
+	Describe string `json:"describe"`
+	AppID    string `json:"appID"`
+	UserID   string `json:"-"`
+}
+
+// BindGroupResp BindGroupResp
+type BindGroupResp struct {
+	GroupID string `json:"groupID"`
+}
+
+func (g *groupService) BindGroup(ctx context.Context, req *BindGroupReq) (*BindGroupResp, error) {
+	tx := g.db.Begin()
+	// get the git host in tenant
+	gitHost := g.gitRepo.Get(ctx, tx)
+	if gitHost == nil {
+		tx.Rollback()
+		return nil, error2.New(code.ErrDataNotExist)
+	}
+	// get the git admin client
+	client, err := git2.GetClient(git2.Gitlab, gitHost.Token, gitHost.Host)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	group, err := client.GetGroupByID(ctx, req.GID)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	groupInfo := &models.Group{
+		ID:        id.StringUUID(),
+		GroupName: group.Name,
+		GroupID:   group.ID,
+		Describe:  req.Describe,
+		AppID:     req.AppID,
+		CreatedBy: req.UserID,
+		UpdatedBy: req.UserID,
+		CreatedAt: time.NowUnix(),
+		UpdatedAt: time.NowUnix(),
+	}
+	// group information is stored
+	err = g.groupRepo.Insert(tx, groupInfo)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	tx.Commit()
+	return &BindGroupResp{
+		GroupID: groupInfo.ID,
+	}, nil
+}
+
+// ListGroupReq ListGroupReq
+type ListGroupReq struct {
+}
+
+// ListGroupResp ListGroupResp
+type ListGroupResp struct {
+	Groups []*GroupVO `json:"groups"`
+}
+
+// GroupVO GroupVO
+type GroupVO struct {
+	GID      int    `json:"gid"`
+	Name     string `json:"name"`
+	Describe string `json:"describe"`
+}
+
+func (g *groupService) ListGroup(ctx context.Context, req *ListGroupReq) (*ListGroupResp, error) {
+	gitHost := g.gitRepo.Get(ctx, g.db)
+	if gitHost == nil {
+
+		return nil, error2.New(code.ErrDataNotExist)
+	}
+	// get the git admin client
+	client, err := git2.GetClient(git2.Gitlab, gitHost.Token, gitHost.Host)
+	if err != nil {
+		return nil, err
+	}
+	groups, err := client.ListGroup(ctx)
+	resp := &ListGroupResp{
+		Groups: make([]*GroupVO, 0, len(groups)),
+	}
+	for _, group := range groups {
+		resp.Groups = append(resp.Groups, &GroupVO{
+			GID:      group.ID,
+			Name:     group.Name,
+			Describe: group.Description,
+		})
+	}
+	return resp, nil
 }

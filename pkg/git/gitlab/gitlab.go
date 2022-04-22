@@ -126,8 +126,50 @@ func (g *GIT) CreateGroup(ctx context.Context, name, path string) (*define.Group
 	}, nil
 }
 
+func (g *GIT) ListGroup(ctx context.Context) ([]*define.Group, error) {
+	groups, _, err := g.git.Groups.ListGroups(&gitlab.ListGroupsOptions{})
+	if err, ok := err.(*gitlab.ErrorResponse); ok {
+		if err.Response.StatusCode == http.StatusNotFound {
+			return nil, nil
+		}
+	}
+	resp := make([]*define.Group, 0, len(groups))
+	for _, group := range groups {
+		resp = append(resp, &define.Group{
+			ID:             group.ID,
+			Name:           group.Name,
+			Path:           group.Path,
+			Description:    group.Description,
+			MembershipLock: group.MembershipLock,
+			Visibility:     string(group.Visibility),
+			FullName:       group.FullName,
+			FullPath:       group.FullPath,
+		})
+	}
+	return resp, nil
+}
+
 func (g *GIT) GetGroupByName(ctx context.Context, name string) (*define.Group, error) {
 	group, _, err := g.git.Groups.GetGroup(name, &gitlab.GetGroupOptions{})
+	if err, ok := err.(*gitlab.ErrorResponse); ok {
+		if err.Response.StatusCode == http.StatusNotFound {
+			return nil, nil
+		}
+	}
+	return &define.Group{
+		ID:             group.ID,
+		Name:           group.Name,
+		Path:           group.Path,
+		Description:    group.Description,
+		MembershipLock: group.MembershipLock,
+		Visibility:     string(group.Visibility),
+		FullName:       group.FullName,
+		FullPath:       group.FullPath,
+	}, err
+}
+
+func (g *GIT) GetGroupByID(ctx context.Context, gid int) (*define.Group, error) {
+	group, _, err := g.git.Groups.GetGroup(gid, &gitlab.GetGroupOptions{})
 	if err, ok := err.(*gitlab.ErrorResponse); ok {
 		if err.Response.StatusCode == http.StatusNotFound {
 			return nil, nil
