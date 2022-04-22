@@ -114,21 +114,18 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 		{
 			f.POST("/create", fnAPI.Create)
 			f.POST("/update/status", fnAPI.UpdateStatus)
+			f.POST("/update/doc", fnAPI.UpdateDoc)
 			f.DELETE("/del", fnAPI.Delete)
 			f.GET("/get", fnAPI.Get)
 			f.GET("/logger/:resourceRef", fnAPI.ListLog)
 			f.GET("/list/:projectID", fnAPI.List)
 		}
+		svcApi := NewServing(db, c, k8sClient)
+		{
+			f.POST("/serve", svcApi.serve)
+			f.DELETE("/offline", svcApi.offline)
+		}
 	}
-
-	// TODO: restful
-	svcApi := NewServing(db, c, k8sClient)
-	svc := v1.Group("/svc")
-	{
-		svc.PUT("/svc", svcApi.serve)
-		svc.DELETE("/svc", svcApi.offline)
-	}
-
 	{
 		probe := probe.New(util.LoggerFromContext(ctx))
 		engine.GET("liveness", func(c *gin.Context) {

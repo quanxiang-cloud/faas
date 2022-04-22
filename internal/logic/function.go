@@ -32,6 +32,7 @@ type Function interface {
 	List(c context.Context, r *ListRequest) (*ListResponse, error)
 
 	RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerResp, error)
+	UpdateDoc(c context.Context, req *UpdateDocReq) (*UpdateDocResp, error)
 }
 
 type function struct {
@@ -425,6 +426,8 @@ type UpdateDocReq struct {
 }
 
 type UpdateDocResp struct {
+	ID    string `json:"id"`
+	Topic string `json:"topic"`
 }
 
 func (g *function) UpdateDoc(c context.Context, req *UpdateDocReq) (*UpdateDocResp, error) {
@@ -437,18 +440,22 @@ func (g *function) UpdateDoc(c context.Context, req *UpdateDocReq) (*UpdateDocRe
 		return nil, fmt.Errorf("can not find function(%s)", name)
 	}
 
-	// TODO:
+	// TODO: ???
+	fn.Doc = 0
 	if req.Status == "Succeeded" {
-		if err := g.k8sc.DeleteReigstRun(c, req.Name); err != nil {
-			return nil, err
-		}
-		// TODO:
 		fn.Doc = 1
+	}
+
+	if err := g.k8sc.DeleteReigstRun(c, req.Name); err != nil {
+		return nil, err
 	}
 
 	if err := g.functionRepo.Update(c, g.db, fn); err != nil {
 		return nil, err
 	}
 
-	return &UpdateDocResp{}, nil
+	return &UpdateDocResp{
+		ID:    fn.ID,
+		Topic: req.Topic,
+	}, nil
 }
