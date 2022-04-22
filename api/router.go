@@ -2,14 +2,13 @@ package restful
 
 import (
 	"context"
+	elastic2 "github.com/quanxiang-cloud/cabin/tailormade/db/elastic"
+	mysql2 "github.com/quanxiang-cloud/cabin/tailormade/db/mysql"
+	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 
-	"github.com/go-redis/redis/v8"
-	"github.com/olivere/elastic/v7"
 	"github.com/quanxiang-cloud/faas/pkg/k8s"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
-
 	"github.com/quanxiang-cloud/cabin/logger"
 	ginlogger "github.com/quanxiang-cloud/cabin/tailormade/gin"
 	"github.com/quanxiang-cloud/faas/pkg/config"
@@ -31,7 +30,22 @@ type Router struct {
 }
 
 // NewRouter 开启路由
-func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, db *gorm.DB, kc k8s.Client, rc redis.UniversalClient, es *elastic.Client) (*Router, error) {
+func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) (*Router, error) {
+
+	redisClient, err := redis2.NewClient(c.Redis)
+	if err != nil {
+		return nil, err
+	}
+	esClient, err := elastic2.NewClient(&c.Elastic, log)
+	if err != nil {
+		return nil, err
+	}
+	db, err := mysql2.New(c.Mysql, log)
+	if err != nil {
+		return nil, err
+	}
+	k8sClient, err := k8s.NewClient(c.K8s.NameSpace)
+
 	engine, err := newRouter(c)
 	if err != nil {
 		return nil, err
@@ -40,7 +54,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 	v1 := engine.Group("/api/v1/faas")
 
 	{
-		gitAPI := NewGitAPI(ctx, c, db, kc)
+		gitAPI := NewGitAPI(ctx, c, db, k8sClient)
 		g := v1.Group("/git")
 		{
 			g.POST("", gitAPI.Create)
@@ -48,7 +62,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 			g.DELETE("/:id", gitAPI.Delete)
 			g.GET("", gitAPI.Get)
 		}
-		dockerAPI := NewDockerAPI(ctx, c, db, kc)
+		dockerAPI := NewDockerAPI(ctx, c, db, k8sClient)
 		d := v1.Group("/docker")
 		{
 			d.POST("", dockerAPI.Create)
@@ -56,7 +70,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 			d.DELETE("/:id", dockerAPI.Delete)
 			d.GET("", dockerAPI.Get)
 		}
-		cm := NewCompoundAPI(ctx, rc)
+		cm := NewCompoundAPI(ctx, redisClient)
 		cmGroup := v1.Group("/cm")
 		{
 			cmGroup.POST("/subscribe", cm.Subscribe)
@@ -94,7 +108,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 			project.PATCH("/:projectID/desc", projectAPI.UpdDescribe)
 			project.DELETE("/:projectID", projectAPI.DelProject)
 		}
-		fnAPI := NewFunctionAPI(ctx, c, db, kc, rc, es)
+		fnAPI := NewFunctionAPI(ctx, c, db, k8sClient, redisClient, esClient)
 		f := group.Group("/fn")
 		{
 			f.POST("/create", fnAPI.Create)
