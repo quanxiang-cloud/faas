@@ -119,3 +119,14 @@ func (f *Function) ListLog(c *gin.Context) {
 	}
 	resp.Format(f.fn.ListLog(ctx, req)).Context(c)
 }
+
+// List List
+func (f *Function) List(c *gin.Context) {
+	ctx := c.Request.Context()
+	req := &logic.ListRequest{}
+	if err := c.ShouldBindUri(req); err != nil {
+		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
+		return
+	}
+	resp.Format(f.fn.List(ctx, req)).Context(c)
+}
