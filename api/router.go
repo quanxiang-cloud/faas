@@ -62,18 +62,6 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 			cmGroup.POST("/subscribe", cm.Subscribe)
 		}
 	}
-	{
-		fnAPI := NewFunctionAPI(ctx, c, db, kc, rc, es)
-		f := v1.Group("/fn")
-		{
-			f.POST("/create", fnAPI.Create)
-			f.POST("/update/status", fnAPI.UpdateStatus)
-			f.DELETE("/del", fnAPI.Delete)
-			f.GET("/get", fnAPI.Get)
-			f.GET("/:resourceRef/logger", fnAPI.ListLog)
-			f.GET("/list/:page/:limit/:groupID/:projectID", fnAPI.List)
-		}
-	}
 
 	{
 
@@ -106,7 +94,18 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger, 
 			project.PATCH("/:projectID/desc", projectAPI.UpdDescribe)
 			project.DELETE("/:projectID", projectAPI.DelProject)
 		}
+		fnAPI := NewFunctionAPI(ctx, c, db, kc, rc, es)
+		f := group.Group("/fn")
+		{
+			f.POST("/create", fnAPI.Create)
+			f.POST("/update/status", fnAPI.UpdateStatus)
+			f.DELETE("/del", fnAPI.Delete)
+			f.GET("/get", fnAPI.Get)
+			f.GET("/:resourceRef/logger", fnAPI.ListLog)
+			f.GET("/list/:page/:limit/:groupID/:projectID", fnAPI.List)
+		}
 	}
+
 	{
 		probe := probe.New(util.LoggerFromContext(ctx))
 		engine.GET("liveness", func(c *gin.Context) {
