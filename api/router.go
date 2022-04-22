@@ -13,7 +13,6 @@ import (
 	ginlogger "github.com/quanxiang-cloud/cabin/tailormade/gin"
 	"github.com/quanxiang-cloud/faas/pkg/config"
 	"github.com/quanxiang-cloud/faas/pkg/probe"
-	"github.com/quanxiang-cloud/faas/pkg/util"
 )
 
 const (
@@ -122,7 +121,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 	}
 
 	{
-		probe := probe.New(util.LoggerFromContext(ctx))
+		probe := probe.New(log)
 		engine.GET("liveness", func(c *gin.Context) {
 			probe.LivenessProbe(c.Writer, c.Request)
 		})
