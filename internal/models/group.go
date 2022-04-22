@@ -20,4 +20,5 @@ type GroupRepo interface {
 	Del(db *gorm.DB, id string) error
 	Get(db *gorm.DB, id string) (*Group, error)
 	GetByName(db *gorm.DB, name string) (*Group, error)
+	GetByApp(db *gorm.DB, appID string) (*Group, error)
 }

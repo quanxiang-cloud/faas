@@ -86,14 +86,15 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 		{
 			user.POST("", userAPI.CreateUser)
 		}
-		group := v1.Group("/group")
+		g := v1.Group("")
 		{
-			group.POST("", groupAPI.Create)
-			group.GET("/list", groupAPI.ListGroup)
-			group.POST("/bind", groupAPI.BindGroup)
-			group.POST("/:groupID/member", groupAPI.AddMember)
-			group.GET("/:groupID/projects", projectAPI.GetList)
+			g.POST("/group", groupAPI.Create)
+			g.GET("/groups", groupAPI.ListGroup)
+			g.POST("/group.bind", groupAPI.BindGroup)
+			g.POST("/:groupID/member", groupAPI.AddMember)
+			g.GET("/:groupID/projects", projectAPI.GetList)
 		}
+		group := v1.Group("/group")
 		check := v1.Group("/check")
 		{
 			check.GET("/group", groupAPI.CheckGroup)

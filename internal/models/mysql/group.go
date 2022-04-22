@@ -27,7 +27,7 @@ func (g *groupRepo) GetByName(db *gorm.DB, name string) (*models.Group, error) {
 	if err != nil {
 		return nil, err
 	}
-	if db.RowsAffected <= 0 {
+	if db.RowsAffected != 1 {
 		return nil, nil
 	}
 	return res, nil
@@ -39,9 +39,26 @@ func (g *groupRepo) Del(db *gorm.DB, id string) error {
 
 func (g *groupRepo) Get(db *gorm.DB, id string) (*models.Group, error) {
 	res := &models.Group{}
-	err := g.getTable(db).Where("id = ?", id).Find(&res).Error
+	db = g.getTable(db).Where("id = ?", id).Find(&res)
+	err := db.Error
 	if err != nil {
 		return nil, err
+	}
+	if db.RowsAffected != 1 {
+		return nil, nil
+	}
+	return res, nil
+}
+
+func (g *groupRepo) GetByApp(db *gorm.DB, appID string) (*models.Group, error) {
+	res := &models.Group{}
+	db = g.getTable(db).Where("app_id = ?", appID).Find(&res)
+	err := db.Error
+	if err != nil {
+		return nil, err
+	}
+	if db.RowsAffected != 1 {
+		return nil, nil
 	}
 	return res, nil
 }

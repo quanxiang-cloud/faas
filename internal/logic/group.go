@@ -153,7 +153,8 @@ func (g *groupService) AddGroupMember(ctx context.Context, req *AddGroupMemberRe
 }
 
 type CheckGroupReq struct {
-	Group string `json:"group"`
+	Group string `form:"group"`
+	AppID string `form:"appID"`
 }
 
 type CheckGroupResp struct {
@@ -161,7 +162,7 @@ type CheckGroupResp struct {
 }
 
 func (g *groupService) CheckGroup(ctx context.Context, req *CheckGroupReq) (*CheckGroupResp, error) {
-	group, err := g.groupRepo.GetByName(g.db, req.Group)
+	group, err := g.groupRepo.GetByApp(g.db, req.AppID)
 	if err != nil {
 		return nil, err
 	}
@@ -176,8 +177,9 @@ func (g *groupService) CheckGroup(ctx context.Context, req *CheckGroupReq) (*Che
 }
 
 type CheckMemberReq struct {
-	Group  string `json:"group"`
-	UserID string `json:"-"`
+	GroupID string `form:"groupID"`
+	AppID   string `form:"appID"`
+	UserID  string `json:"-"`
 }
 
 type CheckMemberResp struct {
@@ -185,7 +187,7 @@ type CheckMemberResp struct {
 }
 
 func (g *groupService) CheckMember(ctx context.Context, req *CheckMemberReq) (*CheckMemberResp, error) {
-	group, err := g.groupRepo.GetByName(g.db, req.Group)
+	group, err := g.groupRepo.Get(g.db, req.GroupID)
 	if err != nil {
 		return nil, err
 	}
