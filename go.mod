@@ -127,10 +127,7 @@ replace (
 	github.com/go-logr/logr => github.com/go-logr/logr v1.2.0
 	github.com/openfunction => github.com/OpenFunction/OpenFunction v0.6.0
 
-<<<<<<< HEAD
 	//github.com/quanxiang-cloud/cabin => ../cabin
-=======
->>>>>>> feature/serve
 	//github.com/quanxiang-cloud/organizations => ../../../github.com/quanxiang-cloud/organizations
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.21.4
 	k8s.io/client-go => k8s.io/client-go v0.23.5
