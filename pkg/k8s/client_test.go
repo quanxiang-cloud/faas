@@ -154,7 +154,7 @@ func TestReverse(t *testing.T) {
 	}
 
 	for index, val := range testCase {
-		ret, err := reverseName(val)
+		ret, err := ReverseName(val)
 		if err != nil {
 			panic(err)
 		}
