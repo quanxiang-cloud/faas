@@ -280,6 +280,7 @@ func (g *function) DelFunction(c context.Context, r *DelBuildFunctionRequest) (*
 
 type ListlogRequest struct {
 	ResourceRef string `json:"resourceRef" form:"resourceRef" uri:"resourceRef"`
+	Step        string `json:"step" form:"step" uri:"step"`
 	Index       int    `json:"index" form:"index"`
 	Timestamp   int64  `json:"timestamp" form:"timestamp"`
 }
@@ -295,7 +296,7 @@ func (g *function) ListLog(c context.Context, r *ListlogRequest) (*ListLogRespon
 	}
 
 	t := time.Unix(r.Timestamp, 0)
-	fullLogs, count, err := g.buildLogRepo.Search(c, r.ResourceRef, t, r.Index, 5)
+	fullLogs, count, err := g.buildLogRepo.Search(c, r.ResourceRef, r.Step, t, r.Index, 100)
 	if err != nil {
 		return nil, err
 	}
@@ -304,9 +305,10 @@ func (g *function) ListLog(c context.Context, r *ListlogRequest) (*ListLogRespon
 	for _, e := range fullLogs {
 		logs = append(logs, &models.LogVO{
 			Run:       e.Labels.PipelineTask,
-			Step:      e.Labels.Task,
+			Step:      e.ContainerName,
 			Log:       e.Log,
 			Timestamp: e.Time.Unix(),
+			PodName:   e.PodName,
 		})
 	}
 

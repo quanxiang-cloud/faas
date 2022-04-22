@@ -10,6 +10,7 @@ type BaseLog struct {
 
 // Kubernetes Kubernetes
 type Kubernetes struct {
+	PodName        string `json:"pod_name"`
 	ContainerImage string `json:"container_image"`
 	ContainerName  string `json:"container_name"`
 	Labels         Labels `json:"labels"`
@@ -27,4 +28,5 @@ type LogVO struct {
 	Step      string `json:"step"`
 	Timestamp int64  `json:"timestamp"`
 	Log       string `json:"log"`
+	PodName   string `json:"podName"`
 }

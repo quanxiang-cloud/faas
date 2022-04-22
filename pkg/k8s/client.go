@@ -177,6 +177,8 @@ type Git struct {
 const (
 	// RESOURCRREF RESOURCRREF
 	RESOURCRREF = "kubernetes.pod_name"
+	// STEP  STEP
+	STEP = "kubernetes.container_name"
 	// BuildID BuildID
 	BuildID = "quanxiang.faas.build/id"
 	// GROUP GROUP

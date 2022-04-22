@@ -13,5 +13,5 @@ type BuilderLog struct {
 
 // BuilderLogRepo BuilderLogRepo
 type BuilderLogRepo interface {
-	Search(ctx context.Context, ID string, time time.Time, page, size int) ([]*BuilderLog, int64, error)
+	Search(ctx context.Context, id, step string, time time.Time, page, size int) ([]*BuilderLog, int64, error)
 }
