@@ -32,7 +32,7 @@ type Client interface {
 	DelFunction(ctx context.Context, data *DelFunction) error
 	CreateServing(ctx context.Context, fn *Function) error
 	DelServing(ctx context.Context, fn *Function) error
-	RegistAPI(ctx context.Context, fn *Function) error
+	RegistAPI(ctx context.Context, fn *Function, appId string) error
 	DeleteReigstRun(ctx context.Context, name string) error
 }
 
@@ -362,7 +362,7 @@ func genGitRepo(fn *Function) string {
 	return fmt.Sprintf("%s/%s/%s.git", host, group, project)
 }
 
-func (c *client) RegistAPI(ctx context.Context, fn *Function) error {
+func (c *client) RegistAPI(ctx context.Context, fn *Function, appId string) error {
 	pipeRun := &pipeline.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: GenName(fn, true),
@@ -387,6 +387,10 @@ func (c *client) RegistAPI(ctx context.Context, fn *Function) error {
 				{
 					Name:  "HOST",
 					Value: *pipeline.NewArrayOrString(GenName(fn, true)),
+				},
+				{
+					Name:  "APPID",
+					Value: *pipeline.NewArrayOrString(appId),
 				},
 			},
 			ServiceAccountName: "builder",

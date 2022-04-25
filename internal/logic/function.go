@@ -382,7 +382,8 @@ func (g *function) List(c context.Context, r *ListRequest) (*ListResponse, error
 }
 
 type RegSwaggerReq struct {
-	ID string `json:"id"`
+	ID    string `json:"id"`
+	AppID string `json:"appID"`
 }
 
 type RegSwaggerResp struct {
@@ -415,7 +416,7 @@ func (g *function) RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerR
 			Name: git.Name,
 			Host: git.KnownHosts,
 		},
-	})
+	}, r.AppID)
 	return &RegSwaggerResp{}, err
 }
 
