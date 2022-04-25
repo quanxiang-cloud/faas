@@ -130,16 +130,16 @@ func TestRegister(t *testing.T) {
 	ctx := context.Background()
 
 	function := &Function{
-		Version:   "v207",
-		Project:   "samples",
-		GroupName: "OpenFunction",
+		Version:   "v1",
+		Project:   "test",
+		GroupName: "ifclouddemo",
 		Git: &Git{
-			Name: "test",
-			Host: "https://github.com",
+			Name: "demo",
+			Host: "ssh://git@192.168.201.3:30679",
 		},
 	}
 
-	err := c.RegistAPI(ctx, function)
+	err := c.RegistAPI(ctx, function, "test")
 	if err != nil {
 		panic(err)
 	}
