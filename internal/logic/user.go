@@ -38,7 +38,7 @@ func NewUserService(ctx context.Context, db *gorm.DB, conf *config.Config) UserS
 }
 
 type CreateUserReq struct {
-	Account string `json:"Account"`
+	Account string `json:"account"`
 	UserID  string `json:"-"`
 }
 
