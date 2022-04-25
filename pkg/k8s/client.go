@@ -59,11 +59,16 @@ func NewClient(namespace string) Client {
 	}
 }
 
-// UnexpectedType UnexpectedType
-const UnexpectedType = "unexpected type"
+const (
+	// UnexpectedType UnexpectedType
+	UnexpectedType = "unexpected type"
 
-// Default Default
-const Default = "faas"
+	// Default Default
+	Default = "faas"
+
+	// GITTEKTON GITTEKTON
+	GITTEKTON = "tekton.dev/git-0"
+)
 
 func (c *client) CreateGitToken(ctx context.Context, host, token string) error {
 	secret := c.client.CoreV1().Secrets(c.k8sNamespace)
@@ -74,11 +79,15 @@ func (c *client) CreateGitToken(ctx context.Context, host, token string) error {
 	data := make(map[string][]byte)
 	data["host"] = []byte(host)
 	data["token"] = []byte(token)
+
+	tekton := make(map[string]string)
+	tekton[GITTEKTON] = host
 	s := &v1.Secret{
 		Type: v1.SecretTypeOpaque,
 		ObjectMeta: ctrl.ObjectMeta{
-			Name:      tenantID + "-git",
-			Namespace: c.k8sNamespace,
+			Name:        tenantID + "-git",
+			Namespace:   c.k8sNamespace,
+			Annotations: tekton,
 		},
 		Data: data,
 	}
@@ -100,11 +109,16 @@ func (c *client) CreateGitSSH(ctx context.Context, host, ssh string) error {
 	data := make(map[string][]byte)
 	data["known_hosts"] = []byte(host)
 	data["ssh-privatekey"] = []byte(ssh)
+
+	tekton := make(map[string]string)
+	tekton[GITTEKTON] = host
+
 	s := &v1.Secret{
 		Type: v1.SecretTypeSSHAuth,
 		ObjectMeta: ctrl.ObjectMeta{
-			Name:      tenantID + "-git",
-			Namespace: c.k8sNamespace,
+			Name:        tenantID + "-git",
+			Namespace:   c.k8sNamespace,
+			Annotations: tekton,
 		},
 		Data: data,
 	}
