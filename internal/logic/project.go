@@ -45,7 +45,7 @@ type CreateProjectReq struct {
 	Alias    string `json:"alias"`
 	Language string `json:"language"`
 	Version  string `json:"version"`
-	Describe string `json:"describe"`
+	Describe string `json:"description"`
 	UserID   string `json:"-"`
 }
 
@@ -198,7 +198,7 @@ func (p *project) DelProject(ctx context.Context, req *DelProjectReq) (*DelProje
 
 type UpdateDescribeReq struct {
 	ProjectID string `json:"-"`
-	Describe  string `json:"describe"`
+	Describe  string `json:"description"`
 }
 
 type UpdateDescribeResp struct {

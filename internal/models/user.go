@@ -7,6 +7,7 @@ type User struct {
 	UserID    string
 	GitID     int
 	GitName   string
+	Token     string
 	CreatedAt int64
 	UpdatedAt int64
 	CreatedBy string

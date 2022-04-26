@@ -4,6 +4,7 @@ import (
 	"context"
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/id"
+	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/time"
 	"github.com/quanxiang-cloud/faas/internal/models"
 	"github.com/quanxiang-cloud/faas/internal/models/mysql"
@@ -58,7 +59,13 @@ func (u *userSerice) CreateUser(ctx context.Context, req *CreateUserReq) (*Creat
 		return nil, err
 	}
 	user, err := gitClient.GetUser(ctx, req.Account)
-	if err != nil {
+	if err != nil || user == nil {
+		tx.Rollback()
+		return nil, error2.New(code.ErrDataNotExist)
+	}
+
+	token, err := gitClient.CreateUserToken(ctx, user.ID)
+	if err != nil || token == "" {
 		tx.Rollback()
 		return nil, error2.New(code.ErrDataNotExist)
 	}
@@ -67,6 +74,7 @@ func (u *userSerice) CreateUser(ctx context.Context, req *CreateUserReq) (*Creat
 		UserID:    req.UserID,
 		GitName:   req.Account,
 		GitID:     user.ID,
+		Token:     token,
 		CreatedAt: time.NowUnix(),
 		UpdatedAt: time.NowUnix(),
 		CreatedBy: req.UserID,
@@ -123,18 +131,33 @@ type CheckUserReq struct {
 }
 
 type CheckUserResp struct {
-	IsDeveloper bool `json:"isDeveloper"`
+	UserAccount string `json:"userAccount"`
 }
 
 func (u *userSerice) CheckUser(ctx context.Context, req *CheckUserReq) (*CheckUserResp, error) {
-	userID, err := u.userRepo.GetByUserID(u.db, req.UserID)
-	if err != nil || userID == nil {
+	gitHost := u.gitRepo.Get(ctx, u.db)
+	if gitHost == nil {
+		return nil, error2.New(code.ErrDataNotExist)
+	}
+	gitClient, err := git2.GetClient(git2.Gitlab, gitHost.Token, gitHost.Host)
+	if err != nil {
+		return nil, err
+	}
+	user, err := u.userRepo.GetByUserID(u.db, req.UserID)
+	if err != nil || user == nil {
 		return &CheckUserResp{
-			IsDeveloper: false,
+			UserAccount: "",
+		}, nil
+	}
+	logger.Logger.Info(user.GitName)
+	gitUser, err := gitClient.GetUser(ctx, user.GitName)
+	if err != nil || gitUser == nil {
+		return &CheckUserResp{
+			UserAccount: "",
 		}, nil
 	}
 	return &CheckUserResp{
-		IsDeveloper: true,
+		UserAccount: gitUser.Username,
 	}, nil
 }
 

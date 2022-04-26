@@ -283,3 +283,19 @@ func (g *GIT) GetGroupProjects(ctx context.Context, gid interface{}) ([]*define.
 	}
 	return projectsResp, nil
 }
+
+func (g *GIT) CreateUserToken(ctx context.Context, uid int) (string, error) {
+
+	defaultTokenName := "qxp-op-tokeb"
+	tokenScopes := make([]string, 0)
+	tokenScopes = append(tokenScopes, "api")
+	tokenScopes = append(tokenScopes, "read_user")
+	token, _, err := g.git.Users.CreateImpersonationToken(uid, &gitlab.CreateImpersonationTokenOptions{
+		Name:   &defaultTokenName,
+		Scopes: &tokenScopes,
+	})
+	if err != nil {
+		return "", err
+	}
+	return token.Token, nil
+}

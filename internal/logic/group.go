@@ -43,7 +43,7 @@ func NewGroupService(ctx context.Context, db *gorm.DB, conf *config.Config) Grou
 // CreateGroupReq CreateGroupReq
 type CreateGroupReq struct {
 	AppID    string `json:"appID"`
-	Group    string `json:"group"`
+	Group    string `json:"name"`
 	Describe string `json:"describe"`
 	UserID   string `json:"-"`
 }
@@ -113,22 +113,7 @@ func (g *groupService) AddGroupMember(ctx context.Context, req *AddGroupMemberRe
 		tx.Rollback()
 		return nil, error2.New(code.ErrDataNotExist)
 	}
-	client, err := git2.GetClient(git2.Gitlab, gitHost.Token, gitHost.Host)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
 	user, err := g.userRepo.GetByUserID(tx, req.UserID)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-	group, err := g.groupRepo.Get(g.db, req.GroupID)
-	if err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-	err = client.AddGroupMember(ctx, group.GroupID, user.GitID)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -153,7 +138,6 @@ func (g *groupService) AddGroupMember(ctx context.Context, req *AddGroupMemberRe
 }
 
 type CheckGroupReq struct {
-	Group string `form:"group"`
 	AppID string `form:"appID"`
 }
 
@@ -213,7 +197,6 @@ func (g *groupService) CheckMember(ctx context.Context, req *CheckMemberReq) (*C
 // BindGroupReq BindGroupReq
 type BindGroupReq struct {
 	GID      int    `json:"gid"`
-	Group    string `json:"group"`
 	Describe string `json:"describe"`
 	AppID    string `json:"appID"`
 	UserID   string `json:"-"`
@@ -247,7 +230,7 @@ func (g *groupService) BindGroup(ctx context.Context, req *BindGroupReq) (*BindG
 		ID:        id.StringUUID(),
 		GroupName: group.Name,
 		GroupID:   group.ID,
-		Describe:  req.Describe,
+		Describe:  group.Description,
 		AppID:     req.AppID,
 		CreatedBy: req.UserID,
 		UpdatedBy: req.UserID,
@@ -268,6 +251,7 @@ func (g *groupService) BindGroup(ctx context.Context, req *BindGroupReq) (*BindG
 
 // ListGroupReq ListGroupReq
 type ListGroupReq struct {
+	UserID string `json:"-"`
 }
 
 // ListGroupResp ListGroupResp
@@ -285,11 +269,14 @@ type GroupVO struct {
 func (g *groupService) ListGroup(ctx context.Context, req *ListGroupReq) (*ListGroupResp, error) {
 	gitHost := g.gitRepo.Get(ctx, g.db)
 	if gitHost == nil {
-
 		return nil, error2.New(code.ErrDataNotExist)
 	}
+	user, err := g.userRepo.GetByUserID(g.db, req.UserID)
+	if err != nil {
+		return nil, err
+	}
 	// get the git admin client
-	client, err := git2.GetClient(git2.Gitlab, gitHost.Token, gitHost.Host)
+	client, err := git2.GetClient(git2.Gitlab, user.Token, gitHost.Host)
 	if err != nil {
 		return nil, err
 	}

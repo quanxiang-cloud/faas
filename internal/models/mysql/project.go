@@ -26,8 +26,12 @@ func (g *projectRepo) Del(db *gorm.DB, id string) error {
 
 func (g *projectRepo) Get(db *gorm.DB, id string) (*models.Project, error) {
 	res := &models.Project{}
-	err := g.getTable(db).Where("id = ?", id).Find(&res).Error
+	db = g.getTable(db).Where("id = ?", id).Find(&res)
+	err := db.Error
 	if err != nil {
+		return nil, err
+	}
+	if db.RowsAffected <= 0 {
 		return nil, err
 	}
 	return res, nil

@@ -4,10 +4,14 @@ import "gorm.io/gorm"
 
 const (
 	ProjectSuccessStatus = 1
+	ProjectFailureStatus = -1
+	ProjectUnknownStatus = 0
 )
 
 var ProjectStatus = map[int]string{
-	ProjectSuccessStatus: "成功",
+	ProjectSuccessStatus: "True",
+	ProjectFailureStatus: "False",
+	ProjectUnknownStatus: "Unknown",
 }
 
 type Project struct {

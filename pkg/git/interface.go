@@ -8,6 +8,7 @@ import (
 type GIT interface {
 	CreateUser(ctx context.Context, email, password, username, name string, skipConfirmation bool) (*define.User, error)
 	GetUser(ctx context.Context, username string) (*define.User, error)
+	CreateUserToken(ctx context.Context, uid int) (string, error)
 
 	AddSSHKeyForUser(ctx context.Context, userID int, title, key string) error
 	ListSSHKey(ctx context.Context, userID int) ([]*define.SSHKey, error)

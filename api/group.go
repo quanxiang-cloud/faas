@@ -91,6 +91,7 @@ func (g *GroupAPI) ListGroup(c *gin.Context) {
 		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
 		return
 	}
+	req.UserID = c.GetHeader(_userID)
 	ctx := ginheader.MutateContext(c)
 	resp.Format(g.groupService.ListGroup(ctx, req)).Context(c)
 }

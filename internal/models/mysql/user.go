@@ -26,18 +26,25 @@ func (u *userRepo) Delete(db *gorm.DB, id string) error {
 
 func (u *userRepo) Get(db *gorm.DB, id string) (*models.User, error) {
 	res := &models.User{}
-	err := u.getTable(db).Where("id = ?", id).Find(&res).Error
+	db = u.getTable(db).Where("id = ?", id).Find(&res)
+	err := db.Error
 	if err != nil {
 		return nil, err
+	}
+	if db.RowsAffected <= 0 {
+		return nil, nil
 	}
 	return res, nil
 }
 
 func (u *userRepo) GetByUserID(db *gorm.DB, userID string) (*models.User, error) {
 	res := &models.User{}
-	err := u.getTable(db).Where("user_id = ?", userID).Find(&res).Error
-	if err != nil {
-		return nil, err
+	db = u.getTable(db).Where("user_id = ?", userID).Find(&res)
+	if db.Error != nil {
+		return nil, db.Error
+	}
+	if db.RowsAffected <= 0 {
+		return nil, nil
 	}
 	return res, nil
 }
