@@ -44,7 +44,7 @@ type CreateProjectReq struct {
 	Name     string `json:"name"`
 	Alias    string `json:"alias"`
 	Language string `json:"language"`
-	Version  string `json:"version"`
+	Version  string `json:"tag"`
 	Describe string `json:"description"`
 	UserID   string `json:"-"`
 }
@@ -104,9 +104,9 @@ type GetProjectByIDResp struct {
 	Description string `json:"description"`
 	Name        string `json:"name"`
 	Alias       string `json:"alias"`
-	Status      string `json:"status"`
+	Status      string `json:"state"`
 	Language    string `json:"language"`
-	Version     string `json:"version"`
+	Version     string `json:"tag"`
 	CreatedAt   int64  `json:"createdAt"`
 	UpdatedAt   int64  `json:"updatedAt"`
 	CreatedBy   string `json:"creator"`
@@ -136,9 +136,9 @@ type Project struct {
 	Description string `json:"description"`
 	Name        string `json:"name"`
 	Alias       string `json:"alias"`
-	Status      string `json:"status"`
+	Status      string `json:"state"`
 	Language    string `json:"language"`
-	Version     string `json:"version"`
+	Version     string `json:"tag"`
 	CreatedAt   int64  `json:"createdAt"`
 	UpdatedAt   int64  `json:"updatedAt"`
 	CreatedBy   string `json:"creator"`
