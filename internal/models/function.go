@@ -11,7 +11,7 @@ type Function struct {
 	GroupID     string `gorm:"column:group_id;type:varchar(64);" json:"groupID"`
 	ProjectID   string `gorm:"column:project_id;type:varchar(64);" json:"projectID"`
 	Version     string `gorm:"column:version;type:varchar(200);" json:"version"`
-	Language    string `gorm:"column:language;type:varchar(200);" json:"language"`
+	Describe    string `gorm:"column:describe;type:text;" json:"describe"`
 	Status      int    `gorm:"column:status;type:varchar(200);" json:"status"`
 	Doc         int    `json:"doc"`
 	Env         string `gorm:"column:env;type:text;" json:"env"`

@@ -65,7 +65,7 @@ type CreateFunctionRequest struct {
 	GroupID   string            `json:"groupID"  form:"groupID" uri:"groupID"`
 	ProjectID string            `json:"projectID" form:"projectID" uri:"projectID"`
 	Version   string            `json:"version" form:"version" uri:"version"`
-	Language  string            `json:"language" form:"language" uri:"language"`
+	Describe  string            `json:"describe" form:"describe" uri:"describe"`
 	Env       map[string]string `json:"env"`
 }
 type CreateFunctionResponse struct {
@@ -76,7 +76,7 @@ func (g *function) Create(c context.Context, r *CreateFunctionRequest) (*CreateF
 	data := &models.Function{}
 	data.ID = id.ShortID(0)
 	data.GroupID = r.GroupID
-	data.Language = r.Language
+	data.Describe = r.Describe
 	data.ProjectID = r.ProjectID
 	data.Version = r.Version
 	if r.Env != nil {
@@ -178,7 +178,7 @@ type GetFunctionResponse struct {
 	GroupName string `json:"groupName"`
 	Project   string `json:"project"`
 	Version   string `json:"version"`
-	Language  string `json:"language"`
+	Describe  string `json:"describe"`
 	UpdatedAt int64  `json:"updatedAt"`
 }
 
@@ -200,7 +200,7 @@ func (g *function) Get(c context.Context, r *GetFunctionRequest) (*GetFunctionRe
 		GroupName: group.GroupName,
 		Project:   project.ProjectName,
 		Version:   data.Version,
-		Language:  data.Language,
+		Describe:  data.Describe,
 		UpdatedAt: data.UpdatedAt,
 	}
 	return res, nil
@@ -252,7 +252,7 @@ func (g *function) Build(c context.Context, r *BuildFunctionRequest) (*BuildFunc
 			Name:      dockerData.Name,
 			Host:      dockerData.Host,
 		},
-		Builder: k8s.GetBuilder(fnData.Language),
+		Builder: k8s.GetBuilder(project.Language),
 		ENV:     env,
 	})
 }
@@ -343,7 +343,7 @@ type RespFunction struct {
 	GroupID     string `json:"groupID"`
 	ProjectID   string `json:"projectID"`
 	Version     string `json:"version"`
-	Language    string `json:"language"`
+	Describe    string `json:"describe"`
 	Status      int    `json:"status"`
 	Env         string `json:"env"`
 	ResourceRef string `json:"resourceRef"`
@@ -366,7 +366,7 @@ func (g *function) List(c context.Context, r *ListRequest) (*ListResponse, error
 			GroupID:     fns[k].GroupID,
 			ProjectID:   fns[k].ProjectID,
 			Version:     fns[k].Version,
-			Language:    fns[k].Language,
+			Describe:    fns[k].Describe,
 			Status:      fns[k].Status,
 			Env:         fns[k].Env,
 			ResourceRef: fns[k].ResourceRef,
