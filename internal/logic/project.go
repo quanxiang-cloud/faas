@@ -50,6 +50,9 @@ type CreateProjectReq struct {
 }
 
 type CreateProjectResp struct {
+	ID        string `json:"id"`
+	CreatedAt int64  `json:"createAt"`
+	CreatedBy string `json:"creator"`
 }
 
 func (p *project) CreateProject(ctx context.Context, req *CreateProjectReq) (*CreateProjectResp, error) {
@@ -71,7 +74,7 @@ func (p *project) CreateProject(ctx context.Context, req *CreateProjectReq) (*Cr
 		tx.Rollback()
 		return nil, err
 	}
-	err = p.projectRepo.Insert(tx, &models.Project{
+	pmodel := &models.Project{
 		ID:          id.StringUUID(),
 		ProjectID:   project.ID,
 		ProjectName: project.Name,
@@ -86,13 +89,18 @@ func (p *project) CreateProject(ctx context.Context, req *CreateProjectReq) (*Cr
 		UpdatedBy:   req.UserID,
 		CreatedAt:   time.NowUnix(),
 		UpdatedAt:   time.NowUnix(),
-	})
+	}
+	err = p.projectRepo.Insert(tx, pmodel)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 	tx.Commit()
-	return &CreateProjectResp{}, nil
+	return &CreateProjectResp{
+		ID:        pmodel.ID,
+		CreatedBy: pmodel.CreatedBy,
+		CreatedAt: pmodel.CreatedAt,
+	}, nil
 }
 
 type GetProjectByIDReq struct {
@@ -167,15 +175,16 @@ func (p *project) GetList(ctx context.Context, req *GetListReq) (*GetListResp, e
 	}
 	for _, project := range projects {
 		resp.Projects = append(resp.Projects, &Project{
-			ID:        project.ID,
-			Name:      project.ProjectName,
-			Alias:     project.Alias,
-			Status:    models.ProjectStatus[project.Status],
-			Language:  project.Language,
-			Version:   project.Version,
-			CreatedAt: project.CreatedAt,
-			UpdatedAt: project.UpdatedAt,
-			CreatedBy: project.CreatedBy,
+			ID:          project.ID,
+			Name:        project.ProjectName,
+			Alias:       project.Alias,
+			Status:      models.ProjectStatus[project.Status],
+			Description: project.Describe,
+			Language:    project.Language,
+			Version:     project.Version,
+			CreatedAt:   project.CreatedAt,
+			UpdatedAt:   project.UpdatedAt,
+			CreatedBy:   project.CreatedBy,
 		})
 	}
 	return resp, nil
