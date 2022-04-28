@@ -393,8 +393,8 @@ func (g *function) List(c context.Context, r *ListRequest) (*ListResponse, error
 }
 
 type RegSwaggerReq struct {
-	ID    string `json:"id"`
-	AppID string `json:"appID"`
+	ID      string `json:"buildID"`
+	GroupID string `json:"-"`
 }
 
 type RegSwaggerResp struct {
@@ -405,13 +405,15 @@ func (g *function) RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerR
 	if fn.Status != int(StatusOK) {
 		return nil, error2.New(code.ErrDataIllegal)
 	}
-
-	project, err := g.projectRepo.Get(g.db, fn.ProjectID)
+	group, err := g.groupRepo.Get(g.db, r.GroupID)
 	if err != nil {
 		return nil, err
 	}
+	if group == nil {
+		return nil, fmt.Errorf("group not exist")
+	}
 
-	group, err := g.groupRepo.Get(g.db, fn.GroupID)
+	project, err := g.projectRepo.Get(g.db, fn.ProjectID)
 	if err != nil {
 		return nil, err
 	}
@@ -427,7 +429,7 @@ func (g *function) RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerR
 			Name: git.Name,
 			Host: git.KnownHosts,
 		},
-	}, r.AppID)
+	}, group.AppID)
 	return &RegSwaggerResp{}, err
 }
 
