@@ -1,0 +1,52 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: implant
+  namespace: lowcode
+  labels:
+    app: implant
+  annotations:
+    deployment.kubernetes.io/revision: '6'
+    kubesphere.io/creator: charliecha
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: implant
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: implant
+      annotations:
+        kubesphere.io/restartedAt: '2022-04-22T10:04:11.028Z'
+    spec:
+      containers:
+        - name: container-nps9q0
+          image: 'qxcr.xyz/lowcode/implant:v0.0.3'
+          command:
+            - ./cmd/implant
+            - '-fn-update'
+            - 'http://faas/api/v1/faas/group/-/project/update/status'
+            - '-doc-update'
+            - 'http://faas/api/v1/faas/group/-/project/update/doc'
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      serviceAccountName: implantsa
+      serviceAccount: implantsa
+      securityContext: {}
+      imagePullSecrets:
+        - name: qxcr
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
