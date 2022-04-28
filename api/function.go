@@ -142,6 +142,7 @@ func (f *Function) RegSwagger(c *gin.Context) {
 		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
 		return
 	}
+	req.GroupID = c.Param("groupID")
 
 	resp.Format(f.fn.RegSwagger(ginheader.MutateContext(c), req)).Context(c)
 }
