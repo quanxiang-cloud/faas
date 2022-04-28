@@ -42,7 +42,7 @@ func (p *ProjectAPI) CreateProject(c *gin.Context) {
 func (p *ProjectAPI) GetProjectByID(c *gin.Context) {
 	req := &logic.GetProjectByIDReq{}
 	ctx := ginheader.MutateContext(c)
-	req.ProjectID = c.Param(":projectID")
+	req.ProjectID = c.Param("projectID")
 	resp.Format(p.projectService.GetProjectByID(ctx, req)).Context(c)
 }
 

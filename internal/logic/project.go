@@ -104,7 +104,7 @@ func (p *project) CreateProject(ctx context.Context, req *CreateProjectReq) (*Cr
 }
 
 type GetProjectByIDReq struct {
-	ProjectID string `json:"projectID"`
+	ProjectID string `json:"-"`
 }
 
 type GetProjectByIDResp struct {
