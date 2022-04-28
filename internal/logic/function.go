@@ -159,17 +159,17 @@ func (g *function) UpdateStatus(c context.Context, r *UpdateFunctionRequest) (*U
 }
 
 type DeleteFunctionRequest struct {
-	ID string `json:"id"`
+	FunctionID string `json:"functionID" form:"functionID" uri:"functionID"`
 }
 type DeleteFunctionResponse struct {
 }
 
 func (g *function) Delete(c context.Context, r *DeleteFunctionRequest) (*DeleteFunctionResponse, error) {
-	data := g.functionRepo.Get(c, g.db, r.ID)
+	data := g.functionRepo.Get(c, g.db, r.FunctionID)
 	if data == nil {
 		return nil, error2.New(code.ErrDataNotExist)
 	}
-	return &DeleteFunctionResponse{}, g.functionRepo.Delete(c, g.db, r.ID)
+	return &DeleteFunctionResponse{}, g.functionRepo.Delete(c, g.db, r.FunctionID)
 }
 
 type GetFunctionRequest struct {

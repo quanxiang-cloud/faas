@@ -22,8 +22,8 @@ func (g *functionRepo) Update(ctx context.Context, tx *gorm.DB, data *models.Fun
 	return tx.Model(data).Updates(data).Error
 }
 
-func (g *functionRepo) Delete(ctx context.Context, tx *gorm.DB, id ...string) error {
-	return tx.Where("id in (?)", id).Delete(&models.Function{}).Error
+func (g *functionRepo) Delete(ctx context.Context, tx *gorm.DB, id string) error {
+	return tx.Where("id=?", id).Delete(&models.Function{}).Error
 }
 
 func (g *functionRepo) Get(ctx context.Context, db *gorm.DB, id string) *models.Function {

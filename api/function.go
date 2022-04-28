@@ -91,7 +91,9 @@ func (f *Function) UpdateStatus(c *gin.Context) {
 
 // Delete delete
 func (f *Function) Delete(c *gin.Context) {
-	r := &logic.DeleteFunctionRequest{}
+	r := &logic.DeleteFunctionRequest{
+		FunctionID: c.Param("functionID"),
+	}
 	err := c.ShouldBind(r)
 	if err != nil {
 		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
