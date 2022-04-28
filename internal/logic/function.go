@@ -67,6 +67,7 @@ type CreateFunctionRequest struct {
 	Version   string            `json:"version" form:"version" uri:"version"`
 	Describe  string            `json:"describe" form:"describe" uri:"describe"`
 	Env       map[string]string `json:"env"`
+	CreatedBy string            `json:"-"`
 }
 type CreateFunctionResponse struct {
 	ID string `json:"id"`
@@ -79,6 +80,7 @@ func (g *function) Create(c context.Context, r *CreateFunctionRequest) (*CreateF
 	data.Describe = r.Describe
 	data.ProjectID = r.ProjectID
 	data.Version = r.Version
+	data.CreatedBy = r.CreatedBy
 	if r.Env != nil {
 		marshal, _ := json.Marshal(r.Env)
 		data.Env = string(marshal)

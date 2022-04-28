@@ -34,7 +34,8 @@ func NewFunctionAPI(c context.Context, conf *config.Config, db *gorm.DB, kc k8s.
 // Create create
 func (f *Function) Create(c *gin.Context) {
 	r := &logic.CreateFunctionRequest{
-		GroupID: c.Param("groupID"),
+		GroupID:   c.Param("groupID"),
+		CreatedBy: c.GetHeader("User-Id"),
 	}
 	err := c.ShouldBind(r)
 	if err != nil {
