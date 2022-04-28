@@ -30,10 +30,10 @@ type pubSub struct {
 }
 
 type SubscribeReq struct {
-	UserID string
-	UUID   string
-	Topic  string
-	Key    string
+	UserID string `json:"userID"`
+	UUID   string `json:"uuid"`
+	Topic  string `json:"topic"`
+	Key    string `json:"key"`
 }
 
 type SubscribeResp struct{}
