@@ -94,8 +94,7 @@ func (f *Function) Delete(c *gin.Context) {
 	r := &logic.DeleteFunctionRequest{
 		FunctionID: c.Param("functionID"),
 	}
-	err := c.ShouldBind(r)
-	if err != nil {
+	if r.FunctionID == "" {
 		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
 		return
 	}
