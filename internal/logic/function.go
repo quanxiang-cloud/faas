@@ -360,7 +360,10 @@ type RespFunction struct {
 func (g *function) List(c context.Context, r *ListRequest) (*ListResponse, error) {
 	fns, count := g.functionRepo.Search(c, g.db, r.ProjectID, r.GroupID, r.Page, r.Limit)
 	if len(fns) == 0 {
-		return nil, error2.New(code.ErrDataNotExist)
+		return &ListResponse{
+			Data:  nil,
+			Count: 0,
+		}, nil
 	}
 
 	res := make([]RespFunction, 0, len(fns))
