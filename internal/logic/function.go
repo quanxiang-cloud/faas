@@ -171,7 +171,7 @@ func (g *function) Delete(c context.Context, r *DeleteFunctionRequest) (*DeleteF
 }
 
 type GetFunctionRequest struct {
-	ID string `json:"id"`
+	ID string `json:"functionID" form:"functionID" uri:"functionID"`
 }
 type GetFunctionResponse struct {
 	ID        string `json:"id"`
@@ -180,6 +180,8 @@ type GetFunctionResponse struct {
 	Version   string `json:"version"`
 	Describe  string `json:"describe"`
 	UpdatedAt int64  `json:"updatedAt"`
+	CreatedBy string `json:"createdBy"`
+	CreatedAt int64  `json:"createdAt"`
 }
 
 func (g *function) Get(c context.Context, r *GetFunctionRequest) (*GetFunctionResponse, error) {
@@ -202,6 +204,8 @@ func (g *function) Get(c context.Context, r *GetFunctionRequest) (*GetFunctionRe
 		Version:   data.Version,
 		Describe:  data.Describe,
 		UpdatedAt: data.UpdatedAt,
+		CreatedBy: data.CreatedBy,
+		CreatedAt: data.CreatedAt,
 	}
 	return res, nil
 

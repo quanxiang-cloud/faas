@@ -118,6 +118,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 			f.GET("/get", fnAPI.Get)
 			f.GET("/logger/:resourceRef", fnAPI.ListLog)
 			f.GET("/list/:projectID", fnAPI.List)
+			f.GET("/:projectID/:functionID", fnAPI.Get)
 			f.POST("/regSwagger", fnAPI.RegSwagger)
 		}
 		svcApi := NewServing(db, c, k8sClient)

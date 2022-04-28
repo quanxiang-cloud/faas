@@ -101,7 +101,9 @@ func (f *Function) Delete(c *gin.Context) {
 
 // Get get
 func (f *Function) Get(c *gin.Context) {
-	r := &logic.GetFunctionRequest{}
+	r := &logic.GetFunctionRequest{
+		ID: c.Param("functionID"),
+	}
 	err := c.ShouldBind(r)
 	if err != nil {
 		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
