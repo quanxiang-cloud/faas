@@ -125,7 +125,9 @@ func (p *project) GetProjectByID(ctx context.Context, req *GetProjectByIDReq) (*
 	if err != nil {
 		return nil, err
 	}
-
+	if project == nil {
+		return nil, error2.New(code.ErrDataNotExist)
+	}
 	return &GetProjectByIDResp{
 		ID:        project.ID,
 		Name:      project.ProjectName,

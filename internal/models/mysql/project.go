@@ -32,7 +32,7 @@ func (g *projectRepo) Get(db *gorm.DB, id string) (*models.Project, error) {
 		return nil, err
 	}
 	if db.RowsAffected <= 0 {
-		return nil, err
+		return nil, nil
 	}
 	return res, nil
 }
