@@ -380,6 +380,8 @@ func (g *function) List(c context.Context, r *ListRequest) (*ListResponse, error
 			Env:         fns[k].Env,
 			ResourceRef: fns[k].ResourceRef,
 			Name:        fns[k].Name,
+			CreatedBy:   fns[k].CreatedBy,
+			CreatedAt:   fns[k].CreatedAt,
 		})
 
 	}
