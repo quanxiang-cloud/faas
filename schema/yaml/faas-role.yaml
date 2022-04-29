@@ -28,6 +28,18 @@ rules:
       - update
       - watch
   - apiGroups:
+      - tekton.dev
+    resources:
+      - pipelineruns
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - update
+      - watch
+      - patch
+  - apiGroups:
       - ""
     resources:
       - secrets

@@ -1,1 +1,0 @@
-ALTER TABLE `functions` ADD COLUMN `doc` int COMMENT 'status of function doc' after `status`;

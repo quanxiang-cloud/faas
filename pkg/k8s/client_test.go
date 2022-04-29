@@ -74,18 +74,19 @@ func TestDelFunction(t *testing.T) {
 	}
 }
 
+// qxcr.xyz/faas/sample-go-func:latest
 func TestCreateServing(t *testing.T) {
 	c := NewClient("serving")
 
 	ctx := context.Background()
 	env := make(map[string]string)
-	env["FUNC_NAME"] = "HelloWorld"
+	env["FUNC_NAME"] = "sample-go-func"
 	env["FUNC_CLEAR_SOURCE"] = "true"
 	function := &Function{
 		ID:        "1",
-		Version:   "v207",
-		Project:   "samples",
-		GroupName: "OpenFunction",
+		Version:   "latest",
+		Project:   "go-func",
+		GroupName: "sample",
 		Docker: &Docker{
 			NameSpace: "faas/",
 			Name:      "qxcr",

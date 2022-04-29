@@ -16,13 +16,13 @@ import (
 	"github.com/quanxiang-cloud/faas/internal/models/mysql"
 	"github.com/quanxiang-cloud/faas/pkg/code"
 	"github.com/quanxiang-cloud/faas/pkg/config"
+	"github.com/quanxiang-cloud/faas/pkg/event"
 	"github.com/quanxiang-cloud/faas/pkg/k8s"
 	"gorm.io/gorm"
 )
 
 type Function interface {
 	Create(c context.Context, r *CreateFunctionRequest) (*CreateFunctionResponse, error)
-	UpdateStatus(c context.Context, r *UpdateFunctionRequest) (*UpdateFunctionResponse, error)
 	Delete(c context.Context, r *DeleteFunctionRequest) (*DeleteFunctionResponse, error)
 	Get(c context.Context, r *GetFunctionRequest) (*GetFunctionResponse, error)
 	UpdateDescribe(c context.Context, r *UpdateFuncDescribeReq) (*UpdateFuncDescribeResp, error)
@@ -33,7 +33,9 @@ type Function interface {
 	List(c context.Context, r *ListRequest) (*ListResponse, error)
 
 	RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerResp, error)
-	UpdateDoc(c context.Context, req *UpdateDocReq) (*UpdateDocResp, error)
+	DeleteRegPipeline(msg *event.MsgBus) error
+
+	UpdateStatus(*event.MsgBus) error
 }
 
 type function struct {
@@ -141,24 +143,29 @@ var result = map[string]int{
 	"Cancelled": int(StatusCancelled),
 }
 
-func (g *function) UpdateStatus(c context.Context, r *UpdateFunctionRequest) (*UpdateFunctionResponse, error) {
-
-	data := g.functionRepo.GetByName(c, g.db, r.Name)
+func (g *function) UpdateStatus(msg *event.MsgBus) error {
+	data := g.functionRepo.GetByName(msg.CTX, g.db, msg.FnMessage.Name)
 	if data == nil {
-		return nil, error2.New(code.ErrDataNotExist)
+		return error2.New(code.ErrDataNotExist)
 	}
-	if v, ok := result[r.State]; ok && v != 0 {
+	if v, ok := result[msg.FnMessage.State]; ok && v != 0 {
 		data.Status = v
 	}
 	unix := time2.NowUnix()
 	data.UpdatedAt = unix
-	data.ResourceRef = r.ResourceRef
 	data.BuiltAt = unix
-	return &UpdateFunctionResponse{
+	data.ResourceRef = msg.FnMessage.ResourceRef
+	if err := g.functionRepo.Update(msg.CTX, g.db, data); err != nil {
+		return err
+	}
+
+	_, err := g.DelFunction(msg.CTX, &DelBuildFunctionRequest{
 		ID:     data.ID,
-		Status: result[r.State],
-		Topic:  r.Topic,
-	}, g.functionRepo.Update(c, g.db, data)
+		Status: data.Status,
+	})
+
+	msg.Data = data.ID
+	return err
 }
 
 type DeleteFunctionRequest struct {
@@ -409,9 +416,9 @@ type RegSwaggerResp struct {
 
 func (g *function) RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerResp, error) {
 	fn := g.functionRepo.Get(c, g.db, r.ID)
-	if fn.Status != int(StatusOK) {
-		return nil, error2.New(code.ErrDataIllegal)
-	}
+	// if fn.Status != int(StatusOK) {
+	// 	return nil, error2.New(code.ErrDataIllegal)
+	// }
 	group, err := g.groupRepo.Get(g.db, r.GroupID)
 	if err != nil {
 		return nil, err
@@ -440,45 +447,12 @@ func (g *function) RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerR
 	return &RegSwaggerResp{}, err
 }
 
-type UpdateDocReq struct {
-	Name   string `json:"name"`
-	Status string `json:"state"`
-	Topic  string `json:"topic"`
-}
-
-type UpdateDocResp struct {
-	ID    string `json:"id"`
-	Topic string `json:"topic"`
-}
-
-func (g *function) UpdateDoc(c context.Context, req *UpdateDocReq) (*UpdateDocResp, error) {
-	name, err := k8s.ReverseName(req.Name)
-	if err != nil {
-		return nil, err
+func (g *function) DeleteRegPipeline(msg *event.MsgBus) error {
+	var err error
+	if msg.APIDocMessage.State == "succeed" || msg.APIDocMessage.State == "failed" {
+		err = g.k8sc.DeleteReigstRun(msg.CTX, msg.APIDocMessage.Name)
 	}
-	fn := g.functionRepo.GetByName(c, g.db, name)
-	if fn == nil {
-		return nil, fmt.Errorf("can not find function(%s)", name)
-	}
-
-	// TODO: ???
-	fn.Doc = 0
-	if req.Status == "Succeeded" {
-		fn.Doc = 1
-	}
-
-	if err := g.k8sc.DeleteReigstRun(c, req.Name); err != nil {
-		return nil, err
-	}
-
-	if err := g.functionRepo.Update(c, g.db, fn); err != nil {
-		return nil, err
-	}
-
-	return &UpdateDocResp{
-		ID:    fn.ID,
-		Topic: req.Topic,
-	}, nil
+	return err
 }
 
 type UpdateFuncDescribeReq struct {

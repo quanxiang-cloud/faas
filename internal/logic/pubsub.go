@@ -2,17 +2,19 @@ package logic
 
 import (
 	"context"
+	"time"
+
 	"github.com/quanxiang-cloud/faas/internal/models"
 	re "github.com/quanxiang-cloud/faas/internal/models/redis"
+	"github.com/quanxiang-cloud/faas/pkg/event"
 	"github.com/quanxiang-cloud/faas/pkg/publish"
-	"time"
 
 	"github.com/go-redis/redis/v8"
 )
 
 type PubSub interface {
 	Subscribe(ctx context.Context, req *SubscribeReq) (*SubscribeResp, error)
-	Publish(ctx context.Context, req *PublishReq) (*PublishResp, error)
+	Publish(msgBus *event.MsgBus) error
 }
 
 var ttl = time.Duration(300) * time.Second
@@ -54,16 +56,16 @@ type PublishReq struct {
 	Key   string
 }
 
-type PublishResp struct{}
+func (p *pubSub) Publish(msg *event.MsgBus) error {
+	b := event.Convert(msg)
 
-func (p *pubSub) Publish(ctx context.Context, req *PublishReq) (*PublishResp, error) {
-	consumers, err := p.ps.Get(ctx, req.Topic, req.Key)
+	consumers, err := p.ps.Get(msg.CTX, b.Topic, msg.Data)
 	if err != nil {
-		return &PublishResp{}, err
+		return err
 	}
 
 	for _, consumer := range consumers {
-		_, err := p.ph.Publish(ctx, &publish.PublishReq{
+		_, err := p.ph.Publish(msg.CTX, &publish.PublishReq{
 			UserID: consumer.UserID,
 			UUID:   consumer.UUID,
 			Content: map[string]string{
@@ -72,8 +74,8 @@ func (p *pubSub) Publish(ctx context.Context, req *PublishReq) (*PublishResp, er
 			},
 		})
 		if err != nil {
-			return &PublishResp{}, nil
+			return nil
 		}
 	}
-	return &PublishResp{}, nil
+	return nil
 }

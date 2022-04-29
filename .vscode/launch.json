@@ -1,0 +1,9 @@
+{
+  "configurations": [
+    {
+      "type": "nocalhost",
+      "request": "attach",
+      "name": "Nocalhost Debug"
+    }
+  ]
+}

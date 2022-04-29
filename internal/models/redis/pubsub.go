@@ -3,8 +3,9 @@ package redis
 import (
 	"context"
 	"fmt"
-	"github.com/quanxiang-cloud/faas/internal/models"
 	"time"
+
+	"github.com/quanxiang-cloud/faas/internal/models"
 
 	redis "github.com/go-redis/redis/v8"
 )

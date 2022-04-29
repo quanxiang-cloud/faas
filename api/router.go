@@ -7,6 +7,7 @@ import (
 	mysql2 "github.com/quanxiang-cloud/cabin/tailormade/db/mysql"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 
+	"github.com/quanxiang-cloud/faas/pkg/event"
 	"github.com/quanxiang-cloud/faas/pkg/k8s"
 
 	"github.com/gin-gonic/gin"
@@ -31,7 +32,6 @@ type Router struct {
 
 // NewRouter 开启路由
 func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) (*Router, error) {
-
 	redisClient, err := redis2.NewClient(c.Redis)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,6 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 	}
 
 	v1 := engine.Group("/api/v1/faas")
-
 	{
 		gitAPI := NewGitAPI(ctx, c, db, k8sClient)
 		g := v1.Group("/git")
@@ -77,7 +76,6 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 		}
 	}
 	{
-
 		userAPI := NewUserAPI(ctx, c, db)
 		groupAPI := NewGroupAPI(ctx, c, db)
 		projectAPI := NewProjectAPI(ctx, c, db)
@@ -112,8 +110,6 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 		f := project.Group("")
 		{
 			f.POST("/create", fnAPI.Create)
-			f.POST("/update/status", fnAPI.UpdateStatus)
-			f.POST("/update/doc", fnAPI.UpdateDoc)
 			f.DELETE("/:projectID/:functionID", fnAPI.Delete)
 			f.GET("/get", fnAPI.Get)
 			f.GET("/logger/:resourceRef", fnAPI.ListLog)
@@ -127,6 +123,16 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 			f.POST("/serve", svcApi.serve)
 			f.DELETE("/offline", svcApi.offline)
 		}
+
+		er := newEvent(db)
+		{
+			v1.GET("/event/:id", er.GetEvent)
+		}
+
+		event.New(event.WithRouter(engine.Group("")),
+			event.WithHandle(event.Function, fnAPI.fn.UpdateStatus, fnAPI.ps.Publish),
+			// TODO:
+			event.WithHandle(event.APIDoc, er.e.Save, fnAPI.fn.DeleteRegPipeline, fnAPI.ps.Publish))
 	}
 	{
 		probe := probe.New(log)

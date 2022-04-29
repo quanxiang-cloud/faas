@@ -120,3 +120,16 @@ CREATE TABLE `t_user_group`
     `deleted_by` varchar(64) NULL,
     PRIMARY KEY (`id`)
 )
+
+CREATE TABLE `event` (
+    `id`          VARCHAR(64)             COMMENT 'unique id',
+    `name`        VARCHAR(200)            COMMENT 'name of event',
+    `type`        VARCHAR(64)             COMMENT 'type of event',
+    `state`       VARCHAR(64)             COMMENT 'state of event',
+    `message`     VARCHAR(512)            COMMENT 'msg of async',
+    `create_by`   VARCHAR(64),
+    `create_at`   BIGINT(20)              COMMENT 'create time',
+    `update_at`   BIGINT(20)              COMMENT 'update time',
+    `delete_at`   BIGINT(20)              COMMENT 'delete time',
+    PRIMARY KEY (`id`)
+);
