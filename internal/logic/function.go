@@ -25,10 +25,11 @@ type Function interface {
 	UpdateStatus(c context.Context, r *UpdateFunctionRequest) (*UpdateFunctionResponse, error)
 	Delete(c context.Context, r *DeleteFunctionRequest) (*DeleteFunctionResponse, error)
 	Get(c context.Context, r *GetFunctionRequest) (*GetFunctionResponse, error)
+	UpdateDescribe(c context.Context, r *UpdateFuncDescribeReq) (*UpdateFuncDescribeResp, error)
 
 	Build(c context.Context, r *BuildFunctionRequest) (*BuildFunctionResponse, error)
 	DelFunction(c context.Context, r *DelBuildFunctionRequest) (*DelBuildFunctionResponse, error)
-	ListLog(c context.Context, r *ListlogRequest) (*ListLogResponse, error)
+	ListLog(c context.Context, r *ListLogRequest) (*ListLogResponse, error)
 	List(c context.Context, r *ListRequest) (*ListResponse, error)
 
 	RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerResp, error)
@@ -97,6 +98,7 @@ func (g *function) Create(c context.Context, r *CreateFunctionRequest) (*CreateF
 	unix := time2.NowUnix()
 	data.CreatedAt = unix
 	data.UpdatedAt = unix
+	data.BuiltAt = unix
 	one := g.functionRepo.GetByName(c, g.db, data.Name)
 	if one != nil {
 		return nil, error2.New(code.ErrFunctionExist)
@@ -151,6 +153,7 @@ func (g *function) UpdateStatus(c context.Context, r *UpdateFunctionRequest) (*U
 	unix := time2.NowUnix()
 	data.UpdatedAt = unix
 	data.ResourceRef = r.ResourceRef
+	data.BuiltAt = unix
 	return &UpdateFunctionResponse{
 		ID:     data.ID,
 		Status: result[r.State],
@@ -184,6 +187,8 @@ type GetFunctionResponse struct {
 	UpdatedAt int64  `json:"updatedAt"`
 	CreatedBy string `json:"createdBy"`
 	CreatedAt int64  `json:"createdAt"`
+	Status    int    `json:"status"`
+	BuiltAt   int64  `json:"builtAt"`
 }
 
 func (g *function) Get(c context.Context, r *GetFunctionRequest) (*GetFunctionResponse, error) {
@@ -208,6 +213,7 @@ func (g *function) Get(c context.Context, r *GetFunctionRequest) (*GetFunctionRe
 		UpdatedAt: data.UpdatedAt,
 		CreatedBy: data.CreatedBy,
 		CreatedAt: data.CreatedAt,
+		Status:    data.Status,
 	}
 	return res, nil
 
@@ -293,7 +299,7 @@ func (g *function) DelFunction(c context.Context, r *DelBuildFunctionRequest) (*
 
 }
 
-type ListlogRequest struct {
+type ListLogRequest struct {
 	ResourceRef string `json:"resourceRef" form:"resourceRef" uri:"resourceRef"`
 	Step        string `json:"step" form:"step" uri:"step"`
 	Index       int    `json:"index" form:"index"`
@@ -304,7 +310,7 @@ type ListLogResponse struct {
 	Count int64           `json:"count"`
 }
 
-func (g *function) ListLog(c context.Context, r *ListlogRequest) (*ListLogResponse, error) {
+func (g *function) ListLog(c context.Context, r *ListLogRequest) (*ListLogResponse, error) {
 	fn := g.functionRepo.GetByResourceRef(c, g.db, r.ResourceRef)
 	if fn == nil {
 		return nil, error2.New(code.ErrDataNotExist)
@@ -351,6 +357,7 @@ type RespFunction struct {
 	Version     string `json:"version"`
 	Describe    string `json:"describe"`
 	Status      int    `json:"status"`
+	BuiltAt     int64  `json:"builtAt"`
 	Env         string `json:"env"`
 	ResourceRef string `json:"resourceRef"`
 	Name        string ` json:"name"`
@@ -472,4 +479,26 @@ func (g *function) UpdateDoc(c context.Context, req *UpdateDocReq) (*UpdateDocRe
 		ID:    fn.ID,
 		Topic: req.Topic,
 	}, nil
+}
+
+type UpdateFuncDescribeReq struct {
+	ID       string `json:"functionID"`
+	Describe string `json:"describe"`
+}
+
+type UpdateFuncDescribeResp struct {
+}
+
+func (g *function) UpdateDescribe(c context.Context, r *UpdateFuncDescribeReq) (*UpdateFuncDescribeResp, error) {
+	fnData := g.functionRepo.Get(c, g.db, r.ID)
+	if fnData == nil {
+		return nil, error2.New(code.ErrDataNotExist)
+	}
+	fnData.Describe = r.Describe
+	fnData.UpdatedAt = time2.NowUnix()
+	err := g.functionRepo.UpdateDescribe(c, g.db, fnData)
+	if err != nil {
+		return nil, err
+	}
+	return &UpdateFuncDescribeResp{}, nil
 }

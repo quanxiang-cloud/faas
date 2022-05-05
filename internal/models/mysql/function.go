@@ -67,3 +67,7 @@ func (g *functionRepo) GetByResourceRef(ctx context.Context, db *gorm.DB, resour
 	}
 	return nil
 }
+
+func (g *functionRepo) UpdateDescribe(ctx context.Context, tx *gorm.DB, data *models.Function) error {
+	return tx.Model(data).Updates(data).Update("describe", data.Describe).Error
+}

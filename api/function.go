@@ -117,7 +117,7 @@ func (f *Function) Get(c *gin.Context) {
 // ListLog ListLog
 func (f *Function) ListLog(c *gin.Context) {
 	ctx := c.Request.Context()
-	req := &logic.ListlogRequest{
+	req := &logic.ListLogRequest{
 		ResourceRef: c.Param("resourceRef"),
 	}
 	if err := c.ShouldBind(req); err != nil {
@@ -163,6 +163,21 @@ func (f *Function) UpdateDoc(c *gin.Context) {
 		Topic: data.Topic,
 		Key:   data.ID,
 	})
+	if err != nil {
+		resp.Format(nil, err).Context(c)
+		return
+	}
+	resp.Format(data, nil).Context(c)
+}
+
+func (f *Function) UpdateDescribe(c *gin.Context) {
+	req := &logic.UpdateFuncDescribeReq{}
+	if err := c.ShouldBind(req); err != nil {
+		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
+		return
+	}
+	req.ID = c.Param("functionID")
+	data, err := f.fn.UpdateDescribe(ginheader.MutateContext(c), req)
 	if err != nil {
 		resp.Format(nil, err).Context(c)
 		return

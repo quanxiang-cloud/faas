@@ -25,6 +25,7 @@ type Function struct {
 	UpdatedBy string `gorm:"column:updated_by;type:varchar(64); " json:"updatedBy,omitempty"` //创建者
 	DeletedBy string `gorm:"column:deleted_by;type:varchar(64); " json:"deletedBy,omitempty"` //删除者
 	TenantID  string `gorm:"column:tenant_id;type:varchar(64); " json:"tenantID"`             //租户id
+	BuiltAt   int64  `gorm:"column:built_at;type:bigint; " json:"builtAt,omitempty" `
 }
 
 // TableName table name
@@ -35,6 +36,7 @@ func (Function) TableName() string {
 type FunctionRepo interface {
 	Insert(ctx context.Context, tx *gorm.DB, data *Function) error
 	Update(ctx context.Context, tx *gorm.DB, data *Function) error
+	UpdateDescribe(ctx context.Context, tx *gorm.DB, data *Function) error
 	Delete(ctx context.Context, tx *gorm.DB, id string) error
 	Get(ctx context.Context, db *gorm.DB, id string) *Function
 	Search(ctx context.Context, db *gorm.DB, projectID, groupID string, page, limit int) ([]Function, int64)
