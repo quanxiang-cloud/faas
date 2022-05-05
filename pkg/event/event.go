@@ -74,6 +74,10 @@ func (ea *EventAdaptor) init() {
 			ea.log.Debugf("handle pipeline event")
 			bus.Type = APIDoc
 			h = ea.handleMapping[APIDoc]
+		case bus.Msg.Svc != nil:
+			ea.log.Debugf("handle pipeline event")
+			bus.Type = Serving
+			h = ea.handleMapping[Serving]
 		}
 
 		if err := do(bus, h); err != nil {

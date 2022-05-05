@@ -141,6 +141,8 @@ var result = map[string]int{
 	"Succeeded": int(StatusOK),
 	"Failed":    int(StatusFailed),
 	"Cancelled": int(StatusCancelled),
+	"True":      int(StatusOnline),
+	"False":     int(StatusOffline),
 }
 
 func (g *function) UpdateStatus(bus *event.MsgBus) error {

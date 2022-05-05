@@ -114,6 +114,11 @@ func (s *serving) OffLine(ctx context.Context, req *OffLineReq) (*OffLineResp, e
 		return nil, error2.New(code.ErrDataIllegal)
 	}
 
+	fn.Status = int(StatusOffline)
+	if err := s.functionRepo.Update(ctx, s.db, fn); err != nil {
+		return nil, err
+	}
+
 	project, err := s.projectRepo.Get(s.db, fn.ProjectID)
 	if err != nil {
 		return nil, err

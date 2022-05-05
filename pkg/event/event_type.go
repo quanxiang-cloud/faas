@@ -30,8 +30,9 @@ type MsgBus struct {
 }
 
 type Message struct {
-	Fn *Fn `json:"fn"`
-	Pr *Pr `json:"pr"`
+	Fn  *Fn  `json:"fn"`
+	Pr  *Pr  `json:"pr"`
+	Svc *Svc `json:"svc"`
 }
 
 type BaseMessage struct {
@@ -51,4 +52,11 @@ type Pr struct {
 	Name  string `json:"name,omitempty"`
 	Topic string `json:"topic,omitempty"`
 	State string `json:"state,omitempty"`
+}
+
+type Svc struct {
+	Name    string `json:"name,omitempty"`
+	Topic   string `json:"topic,omitempty"`
+	State   string `json:"state,omitempty"`
+	Message string `json:"message,omitempty"`
 }
