@@ -143,28 +143,28 @@ var result = map[string]int{
 	"Cancelled": int(StatusCancelled),
 }
 
-func (g *function) UpdateStatus(msg *event.MsgBus) error {
-	data := g.functionRepo.GetByName(msg.CTX, g.db, msg.FnMessage.Name)
+func (g *function) UpdateStatus(bus *event.MsgBus) error {
+	data := g.functionRepo.GetByName(bus.CTX, g.db, bus.Msg.Fn.Name)
 	if data == nil {
 		return error2.New(code.ErrDataNotExist)
 	}
-	if v, ok := result[msg.FnMessage.State]; ok && v != 0 {
+	if v, ok := result[bus.Msg.Fn.State]; ok && v != 0 {
 		data.Status = v
 	}
 	unix := time2.NowUnix()
 	data.UpdatedAt = unix
 	data.BuiltAt = unix
-	data.ResourceRef = msg.FnMessage.ResourceRef
-	if err := g.functionRepo.Update(msg.CTX, g.db, data); err != nil {
+	data.ResourceRef = bus.Msg.Fn.ResourceRef
+	if err := g.functionRepo.Update(bus.CTX, g.db, data); err != nil {
 		return err
 	}
 
-	_, err := g.DelFunction(msg.CTX, &DelBuildFunctionRequest{
+	_, err := g.DelFunction(bus.CTX, &DelBuildFunctionRequest{
 		ID:     data.ID,
 		Status: data.Status,
 	})
 
-	msg.Data = data.ID
+	bus.Data = data.ID
 	return err
 }
 
@@ -447,10 +447,10 @@ func (g *function) RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerR
 	return &RegSwaggerResp{}, err
 }
 
-func (g *function) DeleteRegPipeline(msg *event.MsgBus) error {
+func (g *function) DeleteRegPipeline(bus *event.MsgBus) error {
 	var err error
-	if msg.APIDocMessage.State == "succeed" || msg.APIDocMessage.State == "failed" {
-		err = g.k8sc.DeleteReigstRun(msg.CTX, msg.APIDocMessage.Name)
+	if bus.Msg.Pr.State == "succeed" || bus.Msg.Pr.State == "failed" {
+		err = g.k8sc.DeleteReigstRun(bus.CTX, bus.Msg.Pr.Name)
 	}
 	return err
 }

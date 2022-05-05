@@ -129,7 +129,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 			v1.GET("/event/:id", er.GetEvent)
 		}
 
-		event.New(event.WithRouter(engine.Group("")),
+		event.New(log, event.WithRouter(engine.Group("")),
 			event.WithHandle(event.Function, fnAPI.fn.UpdateStatus, fnAPI.ps.Publish),
 			// TODO:
 			event.WithHandle(event.APIDoc, er.e.Save, fnAPI.fn.DeleteRegPipeline, fnAPI.ps.Publish))

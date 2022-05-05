@@ -10,16 +10,28 @@ const (
 	Serving
 )
 
+type DaprEvent struct {
+	Topic           string   `json:"topic"`
+	Pubsubname      string   `json:"pubsubname"`
+	Traceid         string   `json:"traceid"`
+	ID              string   `json:"id"`
+	Datacontenttype string   `json:"datacontenttype"`
+	Data            *Message `json:"data"`
+	Type            string   `json:"type"`
+	Specversion     string   `json:"specversion"`
+	Source          string   `json:"source"`
+}
+
 type MsgBus struct {
-	*Message
+	Msg  *Message
 	CTX  context.Context
 	Type EventType
 	Data string
 }
 
 type Message struct {
-	*FnMessage
-	*APIDocMessage
+	Fn *Fn `json:"fn"`
+	Pr *Pr `json:"pr"`
 }
 
 type BaseMessage struct {
@@ -28,14 +40,14 @@ type BaseMessage struct {
 	State string `json:"state,omitempty"`
 }
 
-type FnMessage struct {
+type Fn struct {
 	Name        string `json:"name,omitempty"`
 	Topic       string `json:"topic,omitempty"`
 	State       string `json:"state,omitempty"`
 	ResourceRef string `json:"resource_ref,omitempty"`
 }
 
-type APIDocMessage struct {
+type Pr struct {
 	Name  string `json:"name,omitempty"`
 	Topic string `json:"topic,omitempty"`
 	State string `json:"state,omitempty"`

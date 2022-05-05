@@ -2,23 +2,28 @@ package event
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/quanxiang-cloud/cabin/logger"
 )
 
 type EventAdaptor struct {
 	handleMapping map[EventType][]Handle
 
-	rg *gin.RouterGroup
+	rg  *gin.RouterGroup
+	log logger.AdaptedLogger
 }
 
 type Handle func(*MsgBus) error
 
-func New(opt ...Option) *EventAdaptor {
+func New(log logger.AdaptedLogger, opt ...Option) *EventAdaptor {
 	e := &EventAdaptor{
 		handleMapping: map[EventType][]Handle{},
+		log:           log,
 	}
 	for _, f := range opt {
 		f(e)
@@ -43,27 +48,35 @@ func WithRouter(group *gin.RouterGroup) Option {
 
 func (ea *EventAdaptor) init() {
 	ea.rg.POST("/event", func(c *gin.Context) {
-		msg := &MsgBus{
-			Message: &Message{},
-			CTX:     context.Background(),
+		daprEvent := &DaprEvent{}
+		b, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			log.Println(err.Error())
+			c.JSON(http.StatusOK, nil)
 		}
-
-		if err := c.ShouldBind(msg.Message); err != nil {
+		ea.log.Debugf("receiving event \n %s", string(b))
+		if err := json.Unmarshal(b, daprEvent); err != nil {
 			log.Println(err.Error())
 			c.JSON(http.StatusOK, nil)
 		}
 
+		bus := &MsgBus{
+			CTX: context.Background(),
+			Msg: daprEvent.Data,
+		}
 		var h []Handle
 		switch {
-		case msg.FnMessage != nil:
-			msg.Type = Function
+		case bus.Msg.Fn != nil:
+			ea.log.Debugf("handle function event")
+			bus.Type = Function
 			h = ea.handleMapping[Function]
-		case msg.APIDocMessage != nil:
-			msg.Type = APIDoc
+		case bus.Msg.Pr != nil:
+			ea.log.Debugf("handle pipeline event")
+			bus.Type = APIDoc
 			h = ea.handleMapping[APIDoc]
 		}
 
-		if err := do(msg, h); err != nil {
+		if err := do(bus, h); err != nil {
 			log.Println(err.Error())
 			c.JSON(http.StatusOK, nil)
 		}
@@ -79,19 +92,19 @@ func do(msg *MsgBus, handle []Handle) error {
 	return nil
 }
 
-func Convert(msg *MsgBus) *BaseMessage {
-	switch msg.Type {
+func Convert(bus *MsgBus) *BaseMessage {
+	switch bus.Type {
 	case Function:
 		return &BaseMessage{
-			Name:  msg.FnMessage.Name,
-			State: msg.FnMessage.State,
-			Topic: msg.FnMessage.Topic,
+			Name:  bus.Msg.Fn.Name,
+			State: bus.Msg.Fn.State,
+			Topic: bus.Msg.Fn.Topic,
 		}
 	case APIDoc:
 		return &BaseMessage{
-			Name:  msg.APIDocMessage.Name,
-			State: msg.APIDocMessage.State,
-			Topic: msg.APIDocMessage.Topic,
+			Name:  bus.Msg.Pr.Name,
+			State: bus.Msg.Pr.State,
+			Topic: bus.Msg.Pr.Topic,
 		}
 	default:
 		return nil

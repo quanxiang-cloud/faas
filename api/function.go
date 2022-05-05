@@ -113,28 +113,6 @@ func (f *Function) RegSwagger(c *gin.Context) {
 	resp.Format(f.fn.RegSwagger(ginheader.MutateContext(c), req)).Context(c)
 }
 
-func (f *Function) UpdateDoc(c *gin.Context) {
-	req := &logic.UpdateDocReq{}
-	if err := c.ShouldBind(req); err != nil {
-		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
-		return
-	}
-	data, err := f.fn.UpdateDoc(ginheader.MutateContext(c), req)
-	if err != nil {
-		resp.Format(nil, err).Context(c)
-		return
-	}
-	_, err = f.ps.Publish(ginheader.MutateContext(c), &logic.PublishReq{
-		Topic: data.Topic,
-		Key:   data.ID,
-	})
-	if err != nil {
-		resp.Format(nil, err).Context(c)
-		return
-	}
-	resp.Format(data, nil).Context(c)
-}
-
 func (f *Function) UpdateDescribe(c *gin.Context) {
 	req := &logic.UpdateFuncDescribeReq{}
 	if err := c.ShouldBind(req); err != nil {
