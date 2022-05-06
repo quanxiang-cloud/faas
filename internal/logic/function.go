@@ -451,7 +451,7 @@ func (g *function) RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerR
 
 func (g *function) DeleteRegPipeline(bus *event.MsgBus) error {
 	var err error
-	if bus.Msg.Pr.State == "succeed" || bus.Msg.Pr.State == "failed" {
+	if bus.Msg.Pr.State == "True" || bus.Msg.Pr.State == "False" {
 		err = g.k8sc.DeleteReigstRun(bus.CTX, bus.Msg.Pr.Name)
 	}
 	return err

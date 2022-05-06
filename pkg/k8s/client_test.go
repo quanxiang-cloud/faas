@@ -162,3 +162,15 @@ func TestReverse(t *testing.T) {
 		fmt.Printf("case %d: %s\n", index, ret)
 	}
 }
+
+func TestGenGIT(t *testing.T) {
+	fn := &Function{
+		Project:   "project",
+		GroupName: "group",
+		Git: &Git{
+			Host: "ssh://git@192.168.201.3:30679/",
+		},
+	}
+
+	fmt.Println(genGitRepo(fn))
+}

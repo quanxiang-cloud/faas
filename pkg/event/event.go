@@ -75,7 +75,7 @@ func (ea *EventAdaptor) init() {
 			bus.Type = APIDoc
 			h = ea.handleMapping[APIDoc]
 		case bus.Msg.Svc != nil:
-			ea.log.Debugf("handle pipeline event")
+			ea.log.Debugf("handle serving event")
 			bus.Type = Serving
 			h = ea.handleMapping[Serving]
 		}

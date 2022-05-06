@@ -370,7 +370,7 @@ func ReverseName(name string) (string, error) {
 // TODO: check host
 func genGitRepo(fn *Function) string {
 	host, group, project := fn.Git.Host, fn.GroupName, fn.Project
-	if index := strings.LastIndex(host, "/"); index == len(host) {
+	if index := strings.LastIndex(host, "/"); index == len(host)-1 {
 		host = host[:index]
 	}
 	return fmt.Sprintf("%s/%s/%s.git", host, group, project)
