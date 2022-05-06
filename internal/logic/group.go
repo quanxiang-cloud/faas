@@ -55,6 +55,14 @@ type CreateGroupResp struct {
 
 func (g *groupService) CreateGroup(ctx context.Context, req *CreateGroupReq) (*CreateGroupResp, error) {
 	tx := g.db.Begin()
+	groupExist, err := g.groupRepo.GetByApp(g.db, req.AppID)
+	if err != nil {
+		return nil, err
+	}
+	if groupExist != nil {
+		return nil, error2.New(code.ErrDataExist)
+	}
+
 	// get the git host in tenant
 	gitHost := g.gitRepo.Get(ctx, tx)
 	if gitHost == nil {
@@ -108,6 +116,13 @@ type AddGroupMemberResp struct {
 
 func (g *groupService) AddGroupMember(ctx context.Context, req *AddGroupMemberReq) (*AddGroupMemberResp, error) {
 	tx := g.db.Begin()
+	groupExist, err := g.userGroupRepo.GetByUserGroup(g.db, req.UserID, req.GroupID)
+	if err != nil {
+		return nil, err
+	}
+	if groupExist != nil {
+		return nil, error2.New(code.ErrDataExist)
+	}
 	gitHost := g.gitRepo.Get(ctx, tx)
 	if gitHost == nil {
 		tx.Rollback()
@@ -209,6 +224,13 @@ type BindGroupResp struct {
 
 func (g *groupService) BindGroup(ctx context.Context, req *BindGroupReq) (*BindGroupResp, error) {
 	tx := g.db.Begin()
+	groupExist, err := g.groupRepo.GetByApp(g.db, req.AppID)
+	if err != nil {
+		return nil, err
+	}
+	if groupExist != nil {
+		return nil, error2.New(code.ErrDataExist)
+	}
 	// get the git host in tenant
 	gitHost := g.gitRepo.Get(ctx, tx)
 	if gitHost == nil {

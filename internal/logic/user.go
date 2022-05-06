@@ -13,7 +13,6 @@ import (
 	git2 "github.com/quanxiang-cloud/faas/pkg/git"
 	"github.com/quanxiang-cloud/organizations/pkg/client"
 	"gorm.io/gorm"
-	"strings"
 )
 
 type UserService interface {
@@ -48,6 +47,13 @@ type CreateUserResp struct {
 
 func (u *userSerice) CreateUser(ctx context.Context, req *CreateUserReq) (*CreateUserResp, error) {
 	tx := u.db.Begin()
+	userExist, err := u.userRepo.GetByUserID(u.db, req.UserID)
+	if err != nil {
+		return nil, err
+	}
+	if userExist != nil {
+		return nil, error2.New(code.ErrDataExist)
+	}
 	gitHost := u.gitRepo.Get(ctx, tx)
 	if gitHost == nil {
 		tx.Rollback()
@@ -159,8 +165,4 @@ func (u *userSerice) CheckUser(ctx context.Context, req *CheckUserReq) (*CheckUs
 	return &CheckUserResp{
 		UserAccount: gitUser.Username,
 	}, nil
-}
-
-func email2UserName(email string) string {
-	return email[:strings.LastIndex(email, "@")]
 }
