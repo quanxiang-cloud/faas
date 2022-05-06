@@ -55,3 +55,21 @@ elastic:
   host:
     - http://es.qxp.alpha
   log: true
+
+# ---------- graph ----------
+graph:
+  runs:
+    - start
+    - fetch-from-git
+    - build-trusted
+    - push
+  steps:
+    -
+      - start
+    -
+      - clone
+    -
+      - prepare
+      - create
+    -
+      - push

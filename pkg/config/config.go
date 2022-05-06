@@ -26,6 +26,10 @@ type Config struct {
 	Docker      Docker         `yaml:"docker"`
 	Redis       redis.Config   `yaml:"redis"`
 	Elastic     elastic.Config `yaml:"elastic"`
+	Graph       struct {
+		Runs  []string   `yaml:"runs,omitempty"`
+		Steps [][]string `yaml:"steps,omitempty"`
+	} `yaml:"graph,omitempty"`
 }
 
 // K8s k8s

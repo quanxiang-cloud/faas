@@ -52,6 +52,11 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 	}
 
 	v1 := engine.Group("/api/v1/faas")
+	graphAPI := NewGraphAPI(ctx, c)
+	graph := v1.Group("/graph")
+	{
+		graph.GET("", graphAPI.Get)
+	}
 	{
 		gitAPI := NewGitAPI(ctx, c, db, k8sClient)
 		g := v1.Group("/git")
