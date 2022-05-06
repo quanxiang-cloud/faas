@@ -110,6 +110,12 @@ func Convert(bus *MsgBus) *BaseMessage {
 			State: bus.Msg.Pr.State,
 			Topic: bus.Msg.Pr.Topic,
 		}
+	case Serving:
+		return &BaseMessage{
+			Name:  bus.Msg.Svc.Name,
+			State: bus.Msg.Svc.State,
+			Topic: bus.Msg.Svc.Topic,
+		}
 	default:
 		return nil
 	}

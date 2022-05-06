@@ -43,7 +43,7 @@ func (e *eventRecordor) Save(msg *event.MsgBus) error {
 }
 
 type GetEventReq struct {
-	ID string
+	ID string `json:"id"`
 }
 
 type GetEventResp struct {
