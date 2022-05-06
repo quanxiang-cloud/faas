@@ -27,8 +27,8 @@ type Config struct {
 	Redis       redis.Config   `yaml:"redis"`
 	Elastic     elastic.Config `yaml:"elastic"`
 	Graph       struct {
-		Runs  []string   `yaml:"runs,omitempty"`
-		Steps [][]string `yaml:"steps,omitempty"`
+		Runs  []string   `yaml:"runs,omitempty" json:"runs"`
+		Steps [][]string `yaml:"steps,omitempty" json:"steps"`
 	} `yaml:"graph,omitempty"`
 }
 
