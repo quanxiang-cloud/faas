@@ -188,16 +188,17 @@ type GetFunctionRequest struct {
 	ID string `json:"functionID" form:"functionID" uri:"functionID"`
 }
 type GetFunctionResponse struct {
-	ID        string `json:"id"`
-	GroupName string `json:"groupName"`
-	Project   string `json:"project"`
-	Version   string `json:"version"`
-	Describe  string `json:"describe"`
-	UpdatedAt int64  `json:"updatedAt"`
-	CreatedBy string `json:"createdBy"`
-	CreatedAt int64  `json:"createdAt"`
-	Status    int    `json:"status"`
-	BuiltAt   int64  `json:"builtAt"`
+	ID          string `json:"id"`
+	GroupName   string `json:"groupName"`
+	Project     string `json:"project"`
+	Version     string `json:"version"`
+	Describe    string `json:"describe"`
+	UpdatedAt   int64  `json:"updatedAt"`
+	CreatedBy   string `json:"createdBy"`
+	CreatedAt   int64  `json:"createdAt"`
+	Status      int    `json:"status"`
+	BuiltAt     int64  `json:"builtAt"`
+	ResourceRef string `json:"resourceRef"`
 }
 
 func (g *function) Get(c context.Context, r *GetFunctionRequest) (*GetFunctionResponse, error) {
@@ -214,15 +215,16 @@ func (g *function) Get(c context.Context, r *GetFunctionRequest) (*GetFunctionRe
 		return nil, error2.New(code.ErrDataNotExist)
 	}
 	res := &GetFunctionResponse{
-		ID:        data.ID,
-		GroupName: group.GroupName,
-		Project:   project.ProjectName,
-		Version:   data.Version,
-		Describe:  data.Describe,
-		UpdatedAt: data.UpdatedAt,
-		CreatedBy: data.CreatedBy,
-		CreatedAt: data.CreatedAt,
-		Status:    data.Status,
+		ID:          data.ID,
+		GroupName:   group.GroupName,
+		Project:     project.ProjectName,
+		Version:     data.Version,
+		Describe:    data.Describe,
+		UpdatedAt:   data.UpdatedAt,
+		CreatedBy:   data.CreatedBy,
+		CreatedAt:   data.CreatedAt,
+		Status:      data.Status,
+		ResourceRef: data.ResourceRef,
 	}
 	return res, nil
 
