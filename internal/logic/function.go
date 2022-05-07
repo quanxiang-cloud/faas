@@ -200,6 +200,7 @@ type GetFunctionResponse struct {
 	CreatedBy   string `json:"createdBy"`
 	CreatedAt   int64  `json:"createdAt"`
 	Status      int    `json:"status"`
+	DocStatus   int    `json:"docStatus"`
 	BuiltAt     int64  `json:"builtAt"`
 	ResourceRef string `json:"resourceRef"`
 }
@@ -227,6 +228,7 @@ func (g *function) Get(c context.Context, r *GetFunctionRequest) (*GetFunctionRe
 		CreatedBy:   data.CreatedBy,
 		CreatedAt:   data.CreatedAt,
 		Status:      data.Status,
+		DocStatus:   data.DocStatus,
 		ResourceRef: data.ResourceRef,
 	}
 	return res, nil
@@ -371,6 +373,7 @@ type RespFunction struct {
 	Version     string `json:"version"`
 	Describe    string `json:"describe"`
 	Status      int    `json:"status"`
+	DocStatus   int    `json:"docStatus"`
 	BuiltAt     int64  `json:"builtAt"`
 	Env         string `json:"env"`
 	ResourceRef string `json:"resourceRef"`
@@ -398,6 +401,7 @@ func (g *function) List(c context.Context, r *ListRequest) (*ListResponse, error
 			Version:     fns[k].Version,
 			Describe:    fns[k].Describe,
 			Status:      fns[k].Status,
+			DocStatus:   fns[k].DocStatus,
 			Env:         fns[k].Env,
 			ResourceRef: fns[k].ResourceRef,
 			Name:        fns[k].Name,
