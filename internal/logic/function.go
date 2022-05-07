@@ -11,6 +11,7 @@ import (
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/id"
 	time2 "github.com/quanxiang-cloud/cabin/time"
+	"github.com/quanxiang-cloud/faas/internal/consts"
 	"github.com/quanxiang-cloud/faas/internal/models"
 	"github.com/quanxiang-cloud/faas/internal/models/es"
 	"github.com/quanxiang-cloud/faas/internal/models/mysql"
@@ -36,6 +37,7 @@ type Function interface {
 	DeleteRegPipeline(msg *event.MsgBus) error
 
 	UpdateStatus(*event.MsgBus) error
+	UpdateDocStatus(*event.MsgBus) error
 }
 
 type function struct {
@@ -84,6 +86,7 @@ func (g *function) Create(c context.Context, r *CreateFunctionRequest) (*CreateF
 	data.ProjectID = r.ProjectID
 	data.Version = r.Version
 	data.CreatedBy = r.CreatedBy
+	data.DocStatus = consts.DocNotExists
 	if r.Env != nil {
 		marshal, _ := json.Marshal(r.Env)
 		data.Env = string(marshal)
@@ -448,6 +451,10 @@ func (g *function) RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerR
 			Host: git.KnownHosts,
 		},
 	}, group.AppID)
+
+	fn.DocStatus = consts.DocTaskExists
+	g.functionRepo.Update(c, g.db, fn)
+
 	return &RegSwaggerResp{}, err
 }
 
@@ -479,4 +486,23 @@ func (g *function) UpdateDescribe(c context.Context, r *UpdateFuncDescribeReq) (
 		return nil, err
 	}
 	return &UpdateFuncDescribeResp{}, nil
+}
+
+func (g *function) UpdateDocStatus(bus *event.MsgBus) error {
+	data := g.functionRepo.GetByName(bus.CTX, g.db, bus.Msg.Fn.Name)
+	if data == nil {
+		return error2.New(code.ErrDataNotExist)
+	}
+
+	if v, ok := consts.DocStatusMapping[bus.Msg.Pr.State]; ok {
+		data.DocStatus = v
+	}
+	unix := time2.NowUnix()
+	data.UpdatedAt = unix
+	if err := g.functionRepo.Update(bus.CTX, g.db, data); err != nil {
+		return err
+	}
+
+	bus.Data = data.ID
+	return nil
 }

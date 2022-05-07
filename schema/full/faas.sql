@@ -25,6 +25,7 @@ create table functions
     version      varchar(200) null,
     describe     text null,
     status       varchar(200) null,
+    doc_status   int,
     env          text null,
     created_at   bigint null,
     updated_at   bigint null,
