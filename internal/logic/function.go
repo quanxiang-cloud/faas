@@ -493,7 +493,11 @@ func (g *function) UpdateDescribe(c context.Context, r *UpdateFuncDescribeReq) (
 }
 
 func (g *function) UpdateDocStatus(bus *event.MsgBus) error {
-	data := g.functionRepo.GetByName(bus.CTX, g.db, bus.Msg.Fn.Name)
+	fnName, err := k8s.ReverseName(bus.Msg.Pr.Name)
+	if err != nil {
+		return err
+	}
+	data := g.functionRepo.GetByName(bus.CTX, g.db, fnName)
 	if data == nil {
 		return error2.New(code.ErrDataNotExist)
 	}

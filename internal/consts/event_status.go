@@ -9,6 +9,6 @@ const (
 )
 
 var DocStatusMapping = map[string]int{
-	"Failed": DocFailed,
-	"True":   DocSucceed,
+	"False": DocFailed,
+	"True":  DocSucceed,
 }
