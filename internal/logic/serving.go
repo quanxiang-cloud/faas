@@ -70,7 +70,7 @@ func (s *serving) Serve(ctx context.Context, req *ServeReq) (*ServeResp, error) 
 	}
 
 	tx := s.db.Begin()
-	fn.Status = int(StatusOnline)
+	fn.Status = int(StatusServing)
 	if err := s.functionRepo.Update(ctx, tx, fn); err != nil {
 		tx.Rollback()
 		return nil, err

@@ -137,6 +137,7 @@ const (
 
 	StatusOnline
 	StatusOffline
+	StatusServing
 )
 
 var result = map[string]int{
