@@ -38,6 +38,7 @@ type Function interface {
 
 	UpdateStatus(*event.MsgBus) error
 	UpdateDocStatus(*event.MsgBus) error
+	UpdateServingStatus(bus *event.MsgBus) error
 }
 
 type function struct {
@@ -138,6 +139,7 @@ const (
 	StatusOnline
 	StatusOffline
 	StatusServing
+	StatusOnlineFailed
 )
 
 var result = map[string]int{
@@ -146,7 +148,7 @@ var result = map[string]int{
 	"Failed":    int(StatusFailed),
 	"Cancelled": int(StatusCancelled),
 	"True":      int(StatusOnline),
-	"False":     int(StatusOffline),
+	"False":     int(StatusOnlineFailed),
 }
 
 func (g *function) UpdateStatus(bus *event.MsgBus) error {
@@ -170,6 +172,27 @@ func (g *function) UpdateStatus(bus *event.MsgBus) error {
 		Status: data.Status,
 	})
 
+	bus.Data = data.ID
+	return err
+}
+
+func (g *function) UpdateServingStatus(bus *event.MsgBus) error {
+	fnName, err := k8s.ReverseName(bus.Msg.Svc.Name)
+	if err != nil {
+		return err
+	}
+	data := g.functionRepo.GetByName(bus.CTX, g.db, fnName)
+	if data == nil {
+		return error2.New(code.ErrDataNotExist)
+	}
+	if v, ok := result[bus.Msg.Svc.State]; ok && v != 0 {
+		data.Status = v
+	}
+	unix := time2.NowUnix()
+	data.UpdatedAt = unix
+	if err := g.functionRepo.Update(bus.CTX, g.db, data); err != nil {
+		return err
+	}
 	bus.Data = data.ID
 	return err
 }

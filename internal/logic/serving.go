@@ -137,14 +137,14 @@ func (s *serving) OffLine(ctx context.Context, req *OffLineReq) (*OffLineResp, e
 		return nil, err
 	}
 
-	err = s.k8sc.CreateServing(ctx, &k8s.Function{
+	err = s.k8sc.DelServing(ctx, &k8s.Function{
 		Version:   fn.Version,
 		Project:   project.ProjectName,
 		GroupName: group.GroupName,
 	})
 	if err != nil {
 		tx.Rollback()
-		s.log.Error(err, "create serving failed")
+		s.log.Error(err, "delete serving failed")
 		return nil, err
 	}
 
