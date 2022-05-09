@@ -286,7 +286,8 @@ func (c *client) CreateServing(ctx context.Context, fn *Function) error {
 								{Name: fn.Docker.Name},
 							},
 							Containers: []v1.Container{{
-								Name:  "serving",
+								Name: "serving",
+								// Image: fn.Docker.Host + fn.Docker.NameSpace + strings.ToLower(fn.GroupName) + "-" + fn.Project + ":" + fn.Version,
 								Image: fn.Docker.Host + fn.Docker.NameSpace + strings.ToLower(fn.GroupName) + "-" + fn.Project + ":" + fn.Version,
 								Ports: []v1.ContainerPort{{
 									ContainerPort: 8080,

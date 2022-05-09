@@ -51,7 +51,7 @@ type ServeResp struct {
 
 func (s *serving) Serve(ctx context.Context, req *ServeReq) (*ServeResp, error) {
 	fn := s.functionRepo.Get(ctx, s.db, req.ID)
-	if fn.Status != int(StatusOK) {
+	if fn.Status != int(StatusOK) && fn.Status != int(StatusOffline) {
 		return nil, error2.New(code.ErrDataIllegal)
 	}
 
@@ -87,7 +87,7 @@ func (s *serving) Serve(ctx context.Context, req *ServeReq) (*ServeResp, error) 
 		Project:   project.ProjectName,
 		GroupName: group.GroupName,
 		Docker: &k8s.Docker{
-			NameSpace: s.conf.Docker.NameSpace,
+			NameSpace: imageRepo.NameSpace,
 			Name:      imageRepo.Name,
 			Host:      imageRepo.Host,
 		},

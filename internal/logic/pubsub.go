@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/quanxiang-cloud/faas/internal/models"
@@ -76,6 +77,7 @@ func (p *pubSub) Publish(msg *event.MsgBus) error {
 		if err != nil {
 			return nil
 		}
+		log.Printf("push letter: %#v\n", consumer)
 	}
 	return nil
 }
