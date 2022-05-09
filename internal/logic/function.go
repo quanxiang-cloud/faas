@@ -193,6 +193,7 @@ type GetFunctionRequest struct {
 }
 type GetFunctionResponse struct {
 	ID          string `json:"id"`
+	Name        string `json:"name"`
 	GroupName   string `json:"groupName"`
 	Project     string `json:"project"`
 	Version     string `json:"version"`
@@ -221,6 +222,7 @@ func (g *function) Get(c context.Context, r *GetFunctionRequest) (*GetFunctionRe
 	}
 	res := &GetFunctionResponse{
 		ID:          data.ID,
+		Name:        data.Name,
 		GroupName:   group.GroupName,
 		Project:     project.ProjectName,
 		Version:     data.Version,

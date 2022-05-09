@@ -399,8 +399,9 @@ func (c *client) RegistAPI(ctx context.Context, fn *Function, appId string) erro
 					Value: *pipeline.NewArrayOrString(GenName(fn, false)),
 				},
 				{
-					Name:  "HOST",
-					Value: *pipeline.NewArrayOrString(GenName(fn, true)),
+					Name: "HOST",
+					// TODO: hard code
+					Value: *pipeline.NewArrayOrString("localhost:9999"),
 				},
 				{
 					Name:  "APPID",

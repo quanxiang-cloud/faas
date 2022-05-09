@@ -35,6 +35,7 @@ func NewServing(db *gorm.DB, conf *config.Config) Serving {
 		db:           db,
 		conf:         conf,
 		functionRepo: mysql.NewFunctionRepo(),
+		dockerRepo:   mysql.NewDockerRepo(),
 		projectRepo:  mysql.NewProjectRepo(),
 		groupRepo:    mysql.NewGroupRepo(),
 		k8sc:         k8s.NewClient("serving"),
