@@ -148,6 +148,7 @@ var result = map[string]int{
 	"Failed":    int(StatusFailed),
 	"Cancelled": int(StatusCancelled),
 	"True":      int(StatusOnline),
+	"Unknown":   int(StatusOnline),
 	"False":     int(StatusOnlineFailed),
 }
 
