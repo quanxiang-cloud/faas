@@ -10,7 +10,7 @@ import (
 	"github.com/quanxiang-cloud/cabin/time"
 	"github.com/quanxiang-cloud/faas/internal/models"
 	"github.com/quanxiang-cloud/faas/internal/models/mysql"
-	"github.com/quanxiang-cloud/faas/pkg/code"
+	"github.com/quanxiang-cloud/faas/pkg/basic/define/code"
 )
 
 type Docker interface {

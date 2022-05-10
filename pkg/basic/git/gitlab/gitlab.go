@@ -3,8 +3,9 @@ package gitlab
 import (
 	"context"
 	"fmt"
-	"github.com/quanxiang-cloud/faas/pkg/git/define"
 	"net/http"
+
+	"github.com/quanxiang-cloud/faas/pkg/basic/git/define"
 
 	"github.com/xanzy/go-gitlab"
 )

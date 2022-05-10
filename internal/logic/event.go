@@ -7,7 +7,7 @@ import (
 	"github.com/quanxiang-cloud/cabin/id"
 	"github.com/quanxiang-cloud/faas/internal/models"
 	"github.com/quanxiang-cloud/faas/internal/models/mysql"
-	"github.com/quanxiang-cloud/faas/pkg/event"
+	"github.com/quanxiang-cloud/faas/pkg/basic/event"
 	"gorm.io/gorm"
 )
 

@@ -7,8 +7,8 @@ import (
 	mysql2 "github.com/quanxiang-cloud/cabin/tailormade/db/mysql"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 
-	"github.com/quanxiang-cloud/faas/pkg/event"
-	"github.com/quanxiang-cloud/faas/pkg/k8s"
+	"github.com/quanxiang-cloud/faas/pkg/basic/event"
+	"github.com/quanxiang-cloud/faas/pkg/basic/k8s"
 
 	"github.com/gin-gonic/gin"
 	"github.com/quanxiang-cloud/cabin/logger"

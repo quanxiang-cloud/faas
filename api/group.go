@@ -2,12 +2,13 @@ package restful
 
 import (
 	"context"
+
 	"github.com/gin-gonic/gin"
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	ginheader "github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/cabin/tailormade/resp"
 	"github.com/quanxiang-cloud/faas/internal/logic"
-	"github.com/quanxiang-cloud/faas/pkg/code"
+	"github.com/quanxiang-cloud/faas/pkg/basic/define/code"
 	"github.com/quanxiang-cloud/faas/pkg/config"
 	"gorm.io/gorm"
 )

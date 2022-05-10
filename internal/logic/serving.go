@@ -8,9 +8,9 @@ import (
 	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/faas/internal/models"
 	"github.com/quanxiang-cloud/faas/internal/models/mysql"
-	"github.com/quanxiang-cloud/faas/pkg/code"
+	"github.com/quanxiang-cloud/faas/pkg/basic/define/code"
+	"github.com/quanxiang-cloud/faas/pkg/basic/k8s"
 	"github.com/quanxiang-cloud/faas/pkg/config"
-	"github.com/quanxiang-cloud/faas/pkg/k8s"
 	"gorm.io/gorm"
 )
 

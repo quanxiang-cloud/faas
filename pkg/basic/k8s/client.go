@@ -286,8 +286,7 @@ func (c *client) CreateServing(ctx context.Context, fn *Function) error {
 								{Name: fn.Docker.Name},
 							},
 							Containers: []v1.Container{{
-								Name: "serving",
-								// Image: fn.Docker.Host + fn.Docker.NameSpace + strings.ToLower(fn.GroupName) + "-" + fn.Project + ":" + fn.Version,
+								Name:  "serving",
 								Image: fn.Docker.Host + fn.Docker.NameSpace + strings.ToLower(fn.GroupName) + "-" + fn.Project + ":" + fn.Version,
 								Ports: []v1.ContainerPort{{
 									ContainerPort: 8080,
@@ -322,7 +321,7 @@ func genEnv(c *client, fn *Function) []v1.EnvVar {
 	env = append(env,
 		v1.EnvVar{
 			Name:  "FUNC_CONTEXT",
-			Value: fmt.Sprintf("{\"name\":\"%s\",\"version\":\"v2.0.0\",\"runtime\":\"Knative\",\"port\":\"8080\"}", GenName(fn, true)),
+			Value: fmt.Sprintf("{\"name\":\"%s\",\"version\":\"v2.0.0\",\"runtime\":\"Knative\",\"port\":\"8080\", \"prePlugins\":[\"plugin-quanxiang-lowcode-client\"]}", GenName(fn, true)),
 		},
 		v1.EnvVar{
 			Name: "POD_NAME",
@@ -398,11 +397,6 @@ func (c *client) RegistAPI(ctx context.Context, fn *Function, appId string) erro
 				{
 					Name:  "OPERATE_ID",
 					Value: *pipeline.NewArrayOrString(GenName(fn, false)),
-				},
-				{
-					Name: "HOST",
-					// TODO: hard code
-					Value: *pipeline.NewArrayOrString("localhost:9999"),
 				},
 				{
 					Name:  "APPID",

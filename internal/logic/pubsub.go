@@ -7,7 +7,7 @@ import (
 
 	"github.com/quanxiang-cloud/faas/internal/models"
 	re "github.com/quanxiang-cloud/faas/internal/models/redis"
-	"github.com/quanxiang-cloud/faas/pkg/event"
+	"github.com/quanxiang-cloud/faas/pkg/basic/event"
 	"github.com/quanxiang-cloud/faas/pkg/publish"
 
 	"github.com/go-redis/redis/v8"

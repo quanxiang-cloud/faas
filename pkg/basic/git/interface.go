@@ -2,7 +2,8 @@ package git
 
 import (
 	"context"
-	"github.com/quanxiang-cloud/faas/pkg/git/define"
+
+	"github.com/quanxiang-cloud/faas/pkg/basic/git/define"
 )
 
 type GIT interface {

@@ -80,13 +80,13 @@ func TestCreateServing(t *testing.T) {
 
 	ctx := context.Background()
 	env := make(map[string]string)
-	env["FUNC_NAME"] = "sample-go-func"
+	env["FUNC_NAME"] = "HelloWorld"
 	env["FUNC_CLEAR_SOURCE"] = "true"
 	function := &Function{
 		ID:        "1",
-		Version:   "latest",
-		Project:   "go-func",
-		GroupName: "sample",
+		Version:   "v1",
+		Project:   "demo",
+		GroupName: "",
 		Docker: &Docker{
 			NameSpace: "faas/",
 			Name:      "qxcr",
