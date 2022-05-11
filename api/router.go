@@ -137,7 +137,6 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 
 		event.New(log, event.WithRouter(engine.Group("")),
 			event.WithHandle(event.Function, fnAPI.fn.UpdateStatus, fnAPI.ps.Publish),
-			// TODO:
 			event.WithHandle(event.APIDoc, fnAPI.fn.UpdateDocStatus, fnAPI.fn.DeleteRegPipeline, fnAPI.ps.Publish),
 			event.WithHandle(event.Serving, fnAPI.fn.UpdateServingStatus, fnAPI.ps.Publish))
 	}

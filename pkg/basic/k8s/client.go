@@ -35,7 +35,7 @@ type Client interface {
 	DelServing(ctx context.Context, fn *Function) error
 	RegistAPI(ctx context.Context, fn *Function, appId string) error
 	DeleteReigstRun(ctx context.Context, name string) error
-	GetBuilder(language string, tag string) (string, error)
+	GetBuilder(language string, version string) (string, error)
 }
 
 type client struct {
@@ -204,10 +204,10 @@ func (c *client) Build(ctx context.Context, data *Function) error {
 }
 
 // GetBuilder GetBuilder
-func (c *client) GetBuilder(language string, tag string) (string, error) {
-	image, ok := c.buildImages[language+tag]
+func (c *client) GetBuilder(language string, version string) (string, error) {
+	image, ok := c.buildImages[language+version]
 	if !ok {
-		return "", fmt.Errorf("the language(%s) is not supported", language+tag)
+		return "", fmt.Errorf("the language(%s) is not supported", language+version)
 	}
 	return image, nil
 }

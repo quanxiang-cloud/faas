@@ -91,7 +91,7 @@ func (g *function) Create(c context.Context, r *CreateFunctionRequest) (*CreateF
 	data.CreatedBy = r.CreatedBy
 	data.DocStatus = consts.DocNotExists
 	if r.Env != nil {
-		marshal, _ := json.Marshal(r.Env)
+		marshal, _ := json.Marshal(appendDefaultEnv(r.Env))
 		data.Env = string(marshal)
 	}
 	group, err := g.groupRepo.Get(g.db, r.GroupID)
@@ -114,6 +114,15 @@ func (g *function) Create(c context.Context, r *CreateFunctionRequest) (*CreateF
 	return &CreateFunctionResponse{
 		ID: data.ID,
 	}, g.functionRepo.Insert(c, g.db, data)
+}
+
+func appendDefaultEnv(env map[string]string) map[string]string {
+	env[consts.DefaultEnvFuncClearSource] = consts.DefaultEnvFuncClearSourceVal
+	env[consts.DefaultEnvFuncName] = consts.DefaultEnvFuncNameVal
+	if _, ok := env[consts.DefaultEnvGoProxy]; !ok {
+		env[consts.DefaultEnvGoProxy] = consts.DefaultEnvGoProxyVal
+	}
+	return env
 }
 
 type UpdateFunctionRequest struct {
@@ -458,9 +467,6 @@ type RegSwaggerResp struct {
 
 func (g *function) RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerResp, error) {
 	fn := g.functionRepo.Get(c, g.db, r.ID)
-	// if fn.Status != int(StatusOK) {
-	// 	return nil, error2.New(code.ErrDataIllegal)
-	// }
 	group, err := g.groupRepo.Get(g.db, r.GroupID)
 	if err != nil {
 		return nil, err
@@ -476,7 +482,6 @@ func (g *function) RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerR
 
 	git := g.gitRepo.Get(c, g.db)
 
-	// TODO: credentials
 	err = g.k8sc.RegistAPI(c, &k8s.Function{
 		Version:   fn.Version,
 		Project:   project.ProjectName,
