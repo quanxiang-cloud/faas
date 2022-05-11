@@ -103,7 +103,7 @@ func (s *serving) Serve(ctx context.Context, req *ServeReq) (*ServeResp, error) 
 }
 
 type OffLineReq struct {
-	ID string `json:"id"`
+	ID string
 }
 
 type OffLineResp struct {
@@ -111,7 +111,7 @@ type OffLineResp struct {
 
 func (s *serving) OffLine(ctx context.Context, req *OffLineReq) (*OffLineResp, error) {
 	fn := s.functionRepo.Get(ctx, s.db, req.ID)
-	if fn.Status != int(StatusOK) {
+	if fn.Status != int(StatusOnline) {
 		return nil, error2.New(code.ErrDataIllegal)
 	}
 
