@@ -9,6 +9,7 @@ import (
 	"github.com/quanxiang-cloud/faas/internal/models"
 	"github.com/quanxiang-cloud/faas/internal/models/mysql"
 	"github.com/quanxiang-cloud/faas/pkg/basic/define/code"
+	"github.com/quanxiang-cloud/faas/pkg/basic/define/consts"
 	"github.com/quanxiang-cloud/faas/pkg/basic/k8s"
 	"github.com/quanxiang-cloud/faas/pkg/config"
 	"gorm.io/gorm"
@@ -38,7 +39,7 @@ func NewServing(db *gorm.DB, conf *config.Config) Serving {
 		dockerRepo:   mysql.NewDockerRepo(),
 		projectRepo:  mysql.NewProjectRepo(),
 		groupRepo:    mysql.NewGroupRepo(),
-		k8sc:         k8s.NewClient("serving"),
+		k8sc:         k8s.NewClient(conf, consts.ServingNamespace),
 	}
 }
 

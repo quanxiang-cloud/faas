@@ -22,7 +22,6 @@ type Config struct {
 	InternalNet client.Config  `yaml:"internalNet"`
 	Log         logger.Config  `yaml:"log"`
 	Mysql       mysql.Config   `yaml:"mysql"`
-	K8s         K8s            `yaml:"k8s"`
 	Docker      Docker         `yaml:"docker"`
 	Redis       redis.Config   `yaml:"redis"`
 	Elastic     elastic.Config `yaml:"elastic"`
@@ -30,11 +29,8 @@ type Config struct {
 		Runs  []string   `yaml:"runs,omitempty" json:"runs"`
 		Steps [][]string `yaml:"steps,omitempty" json:"steps"`
 	} `yaml:"graph,omitempty"`
-}
 
-// K8s k8s
-type K8s struct {
-	NameSpace string `yaml:"namespace"`
+	BuildImages map[string]string `yaml:"build-images"`
 }
 
 // Docker docker

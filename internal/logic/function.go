@@ -18,6 +18,7 @@ import (
 	"github.com/quanxiang-cloud/faas/pkg/basic/define/consts"
 	"github.com/quanxiang-cloud/faas/pkg/basic/event"
 	"github.com/quanxiang-cloud/faas/pkg/basic/k8s"
+	"github.com/quanxiang-cloud/faas/pkg/basic/strutil"
 	"github.com/quanxiang-cloud/faas/pkg/config"
 	"gorm.io/gorm"
 )
@@ -79,6 +80,7 @@ type CreateFunctionResponse struct {
 	ID string `json:"id"`
 }
 
+// TODO: default env
 func (g *function) Create(c context.Context, r *CreateFunctionRequest) (*CreateFunctionResponse, error) {
 	data := &models.Function{}
 	data.ID = id.ShortID(0)
@@ -178,10 +180,7 @@ func (g *function) UpdateStatus(bus *event.MsgBus) error {
 }
 
 func (g *function) UpdateServingStatus(bus *event.MsgBus) error {
-	fnName, err := k8s.ReverseName(bus.Msg.Svc.Name)
-	if err != nil {
-		return err
-	}
+	fnName := strutil.Reverse(bus.Msg.Svc.Name)
 	data := g.functionRepo.GetByName(bus.CTX, g.db, fnName)
 	if data == nil {
 		return error2.New(code.ErrDataNotExist)
@@ -195,7 +194,7 @@ func (g *function) UpdateServingStatus(bus *event.MsgBus) error {
 		return err
 	}
 	bus.Data = data.ID
-	return err
+	return nil
 }
 
 type DeleteFunctionRequest struct {
@@ -294,6 +293,11 @@ func (g *function) Build(c context.Context, r *BuildFunctionRequest) (*BuildFunc
 	if fnData.Env != "" {
 		json.Unmarshal([]byte(fnData.Env), &env)
 	}
+
+	builder, err := g.k8sc.GetBuilder(project.Language, project.Version)
+	if err != nil {
+		return nil, err
+	}
 	return &BuildFunctionResponse{}, g.k8sc.Build(c, &k8s.Function{
 		Version:   fnData.Version,
 		Project:   project.ProjectName,
@@ -307,7 +311,7 @@ func (g *function) Build(c context.Context, r *BuildFunctionRequest) (*BuildFunc
 			Name:      dockerData.Name,
 			Host:      dockerData.Host,
 		},
-		Builder: k8s.GetBuilder(project.Language),
+		Builder: builder,
 		ENV:     env,
 	})
 }
@@ -520,10 +524,7 @@ func (g *function) UpdateDescribe(c context.Context, r *UpdateFuncDescribeReq) (
 }
 
 func (g *function) UpdateDocStatus(bus *event.MsgBus) error {
-	fnName, err := k8s.ReverseName(bus.Msg.Pr.Name)
-	if err != nil {
-		return err
-	}
+	fnName := strutil.Reverse(bus.Msg.Pr.Name)
 	data := g.functionRepo.GetByName(bus.CTX, g.db, fnName)
 	if data == nil {
 		return error2.New(code.ErrDataNotExist)

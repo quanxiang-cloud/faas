@@ -5,12 +5,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/openfunction/apis/core/v1beta1"
 	"github.com/openfunction/pkg/client/clientset/versioned"
 	ginheader "github.com/quanxiang-cloud/cabin/tailormade/header"
+	"github.com/quanxiang-cloud/faas/pkg/basic/strutil"
+	"github.com/quanxiang-cloud/faas/pkg/config"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -34,58 +35,50 @@ type Client interface {
 	DelServing(ctx context.Context, fn *Function) error
 	RegistAPI(ctx context.Context, fn *Function, appId string) error
 	DeleteReigstRun(ctx context.Context, name string) error
+	GetBuilder(language string, tag string) (string, error)
 }
 
 type client struct {
-	client          *kubernetes.Clientset
-	tekton          *tektonClient.Clientset
-	ofn             versioned.Interface
-	serving         serving.ServiceInterface
-	k8sNamespace    string
-	dockerNamespace string
+	client       *kubernetes.Clientset
+	tekton       *tektonClient.Clientset
+	ofn          versioned.Interface
+	serving      serving.ServiceInterface
+	k8sNamespace string
+	buildImages  map[string]string
 }
 
 // NewClient NewClient
-func NewClient(namespace string) Client {
-	config := ctrl.GetConfigOrDie()
-	clientset := kubernetes.NewForConfigOrDie(config)
-	ofn := versioned.NewForConfigOrDie(config)
+func NewClient(config *config.Config, namespace string) Client {
+	ctrlConfig := ctrl.GetConfigOrDie()
+	clientset := kubernetes.NewForConfigOrDie(ctrlConfig)
+	ofn := versioned.NewForConfigOrDie(ctrlConfig)
+
 	return &client{
 		client:       clientset,
 		k8sNamespace: namespace,
 		ofn:          ofn,
-		serving:      serving.NewForConfigOrDie(config).Services(namespace),
-		tekton:       tektonClient.NewForConfigOrDie(config),
+		serving:      serving.NewForConfigOrDie(ctrlConfig).Services(namespace),
+		tekton:       tektonClient.NewForConfigOrDie(ctrlConfig),
+		buildImages:  config.BuildImages,
 	}
 }
-
-const (
-	// UnexpectedType UnexpectedType
-	UnexpectedType = "unexpected type"
-
-	// Default Default
-	Default = "faas"
-
-	// GITTEKTON GITTEKTON
-	GITTEKTON = "tekton.dev/git-0"
-)
 
 func (c *client) CreateGitToken(ctx context.Context, host, token string) error {
 	secret := c.client.CoreV1().Secrets(c.k8sNamespace)
 	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
-	if tenantID == "" || tenantID == UnexpectedType {
-		tenantID = Default
+	if tenantID == "" || tenantID == TenantUnexpectedType {
+		tenantID = TenantDefault
 	}
 	data := make(map[string][]byte)
 	data["host"] = []byte(host)
 	data["token"] = []byte(token)
 
 	tekton := make(map[string]string)
-	tekton[GITTEKTON] = host
+	tekton[GitTekton] = host
 	s := &v1.Secret{
 		Type: v1.SecretTypeOpaque,
 		ObjectMeta: ctrl.ObjectMeta{
-			Name:        tenantID + "-git",
+			Name:        strutil.GenName(tenantID, SecretGitSuffix),
 			Namespace:   c.k8sNamespace,
 			Annotations: tekton,
 		},
@@ -103,20 +96,20 @@ func (c *client) CreateGitToken(ctx context.Context, host, token string) error {
 func (c *client) CreateGitSSH(ctx context.Context, host, ssh string) error {
 	secret := c.client.CoreV1().Secrets(c.k8sNamespace)
 	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
-	if tenantID == "" || tenantID == UnexpectedType {
-		tenantID = Default
+	if tenantID == "" || tenantID == TenantUnexpectedType {
+		tenantID = TenantDefault
 	}
 	data := make(map[string][]byte)
 	data["known_hosts"] = []byte(host)
 	data["ssh-privatekey"] = []byte(ssh)
 
 	tekton := make(map[string]string)
-	tekton[GITTEKTON] = host
+	tekton[GitTekton] = host
 
 	s := &v1.Secret{
 		Type: v1.SecretTypeSSHAuth,
 		ObjectMeta: ctrl.ObjectMeta{
-			Name:        tenantID + "-git",
+			Name:        strutil.GenName(tenantID, SecretGitSuffix),
 			Namespace:   c.k8sNamespace,
 			Annotations: tekton,
 		},
@@ -133,8 +126,8 @@ func (c *client) CreateGitSSH(ctx context.Context, host, ssh string) error {
 func (c *client) CreateDocker(ctx context.Context, host, username, secret string) error {
 	sc := c.client.CoreV1().Secrets(c.k8sNamespace)
 	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
-	if tenantID == "" || tenantID == UnexpectedType {
-		tenantID = Default
+	if tenantID == "" || tenantID == TenantUnexpectedType {
+		tenantID = TenantDefault
 	}
 
 	auth := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", username, secret)))
@@ -164,7 +157,7 @@ func (c *client) CreateDocker(ctx context.Context, host, username, secret string
 	s := &v1.Secret{
 		Type: v1.SecretTypeDockerConfigJson,
 		ObjectMeta: ctrl.ObjectMeta{
-			Name:      tenantID + "-docker",
+			Name:      strutil.GenName(tenantID, SecretDockerSuffix),
 			Namespace: c.k8sNamespace,
 		},
 		Data: data,
@@ -177,61 +170,15 @@ func (c *client) CreateDocker(ctx context.Context, host, username, secret string
 	return err
 }
 
-// Function Function
-type Function struct {
-	ID        string
-	Version   string
-	Project   string
-	GroupName string
-	Git       *Git
-	Docker    *Docker
-	Builder   string
-	ENV       map[string]string
-}
-
-// Docker Docker
-type Docker struct {
-	Host      string
-	NameSpace string
-	Name      string
-}
-
-// Git Git
-type Git struct {
-	Name string
-	Host string
-}
-
-const (
-	// RESOURCRREF RESOURCRREF
-	RESOURCRREF = "kubernetes.pod_name"
-	// STEP  STEP
-	STEP = "kubernetes.container_name"
-	// BuildID BuildID
-	BuildID = "quanxiang.faas.build/id"
-	// GROUP GROUP
-	GROUP = "quanxiang.faas/group"
-	// ProjectTAG ProjectTAG
-	ProjectTAG = "quanxiang.faas.project/tag"
-	// PROJECT PROJECT
-	PROJECT = "quanxiang.faas/project"
-	// TenentID TenentID
-	TenentID = "quanxiang.faas/tenantID"
-	// ModuleNAME ModuleNAME
-	ModuleNAME = "quanxiang.faas.module/name"
-	// BUILD BUILD
-	BUILD = "build"
-)
-
 func (c *client) Build(ctx context.Context, data *Function) error {
 	fn := c.ofn.CoreV1beta1().Functions(c.k8sNamespace)
 	function := &v1beta1.Function{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: strings.ToLower(data.GroupName) + "-" + data.Project + "-" + data.Version,
+			Name: strutil.GenName(data.GroupName, data.Project, data.Version),
 		},
 		Spec: v1beta1.FunctionSpec{
 			Version: &data.Version,
-			Image:   data.Docker.Host + data.Docker.NameSpace + strings.ToLower(data.GroupName) + "-" + data.Project + ":" + data.Version,
+			Image:   strutil.JoinImage(data.Version, data.Docker.Host, data.Docker.NameSpace, strutil.GenName(data.GroupName, data.Project)),
 			ImageCredentials: &v1.LocalObjectReference{
 				Name: data.Docker.Name,
 			},
@@ -244,7 +191,7 @@ func (c *client) Build(ctx context.Context, data *Function) error {
 				Builder: &data.Builder,
 				Env:     data.ENV,
 				SrcRepo: &v1beta1.GitRepo{
-					Url: data.Git.Host + data.GroupName + "/" + data.Project + ".git",
+					Url: strutil.JoinGIT(data.Git.Host, data.GroupName, data.Project),
 					Credentials: &v1.LocalObjectReference{
 						Name: data.Git.Name,
 					},
@@ -257,8 +204,12 @@ func (c *client) Build(ctx context.Context, data *Function) error {
 }
 
 // GetBuilder GetBuilder
-func GetBuilder(language string) string {
-	return "openfunction/builder-go:latest"
+func (c *client) GetBuilder(language string, tag string) (string, error) {
+	image, ok := c.buildImages[language+tag]
+	if !ok {
+		return "", fmt.Errorf("the language(%s) is not supported", language+tag)
+	}
+	return image, nil
 }
 
 // DelFunction DelFunction
@@ -274,7 +225,7 @@ func (c *client) DelFunction(ctx context.Context, data *DelFunction) error {
 func (c *client) CreateServing(ctx context.Context, fn *Function) error {
 	ksvc := &ksvc.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      GenName(fn, true),
+			Name:      strutil.GenName(fn.Version, fn.Project, fn.GroupName),
 			Namespace: c.k8sNamespace,
 		},
 		Spec: ksvc.ServiceSpec{
@@ -286,12 +237,12 @@ func (c *client) CreateServing(ctx context.Context, fn *Function) error {
 								{Name: fn.Docker.Name},
 							},
 							Containers: []v1.Container{{
-								Name:  "serving",
-								Image: fn.Docker.Host + fn.Docker.NameSpace + strings.ToLower(fn.GroupName) + "-" + fn.Project + ":" + fn.Version,
+								Name:  KsvcDefaultContainerName,
+								Image: strutil.JoinImage(fn.Version, fn.Docker.Host, fn.Docker.NameSpace, strutil.GenName(fn.GroupName, fn.Project)),
 								Ports: []v1.ContainerPort{{
-									ContainerPort: 8080,
+									ContainerPort: KsvcDefaultContainerPort,
 								}},
-								Env: genEnv(c, fn),
+								Env: genServingEnv(c, fn),
 							}},
 						},
 					},
@@ -306,11 +257,11 @@ func (c *client) CreateServing(ctx context.Context, fn *Function) error {
 
 func (c *client) DelServing(ctx context.Context, fn *Function) error {
 	return c.serving.Delete(ctx,
-		GenName(fn, true),
+		strutil.GenName(fn.Version, fn.Project, fn.GroupName),
 		metav1.DeleteOptions{})
 }
 
-func genEnv(c *client, fn *Function) []v1.EnvVar {
+func genServingEnv(c *client, fn *Function) []v1.EnvVar {
 	env := make([]v1.EnvVar, 0, len(fn.ENV))
 	for k, v := range fn.ENV {
 		env = append(env, v1.EnvVar{
@@ -321,7 +272,7 @@ func genEnv(c *client, fn *Function) []v1.EnvVar {
 	env = append(env,
 		v1.EnvVar{
 			Name:  "FUNC_CONTEXT",
-			Value: fmt.Sprintf("{\"name\":\"%s\",\"version\":\"v2.0.0\",\"runtime\":\"Knative\",\"port\":\"8080\", \"prePlugins\":[\"plugin-quanxiang-lowcode-client\"]}", GenName(fn, true)),
+			Value: fmt.Sprintf("{\"name\":\"%s\",\"version\":\"v2.0.0\",\"runtime\":\"Knative\",\"port\":\"8080\", \"prePlugins\":[\"plugin-quanxiang-lowcode-client\"]}", strutil.GenName(fn.Version, fn.Project, fn.GroupName)),
 		},
 		v1.EnvVar{
 			Name: "POD_NAME",
@@ -340,73 +291,38 @@ func genEnv(c *client, fn *Function) []v1.EnvVar {
 	return env
 }
 
-func GenName(fn *Function, reverse bool, prefix ...string) (ret string) {
-	template := "%s-%s-%s"
-	if len(prefix) != 0 {
-		template = prefix[0] + template
-	}
-
-	if !reverse {
-		ret = fmt.Sprintf(template, fn.GroupName, fn.Project, fn.Version)
-	} else {
-		ret = fmt.Sprintf(template, fn.Version, fn.Project, fn.GroupName)
-	}
-	ret = strings.ToLower(ret)
-	return
-}
-
-func ReverseName(name string) (string, error) {
-	first := strings.Index(name, "-")
-	if first == -1 {
-		return name, fmt.Errorf("invalid name")
-	}
-	last := strings.LastIndex(name, "-")
-	if first != last {
-		return fmt.Sprintf("%s-%s-%s", name[last+1:], name[first+1:last], name[:first]), nil
-	}
-	return fmt.Sprintf("%s-%s", name[last+1:], name[:first]), nil
-}
-
-// TODO: check host
-func genGitRepo(fn *Function) string {
-	host, group, project := fn.Git.Host, fn.GroupName, fn.Project
-	if index := strings.LastIndex(host, "/"); index == len(host)-1 {
-		host = host[:index]
-	}
-	return fmt.Sprintf("%s/%s/%s.git", host, group, project)
-}
-
 func (c *client) RegistAPI(ctx context.Context, fn *Function, appId string) error {
+	// TODO:  replace pipelinerun with taskrun
 	pipeRun := &pipeline.PipelineRun{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: GenName(fn, true),
+			Name: strutil.GenName(fn.Version, fn.Project, fn.GroupName),
 		},
 		Spec: pipeline.PipelineRunSpec{
 			PipelineRef: &pipeline.PipelineRef{
-				Name: "register-polyapi",
+				Name: RegisterAPIPipeline,
 			},
 			Params: []pipeline.Param{
 				{
-					Name:  "SOURCE_URL",
-					Value: *pipeline.NewArrayOrString(genGitRepo(fn)),
+					Name:  RegisterAPIParamSourceURL,
+					Value: *pipeline.NewArrayOrString(strutil.JoinGIT(fn.Git.Host, fn.GroupName, fn.Project)),
 				},
 				{
-					Name:  "PROJECT_NAME",
+					Name:  RegisterAPIParamProject,
 					Value: *pipeline.NewArrayOrString(fn.Project),
 				},
 				{
-					Name:  "OPERATE_ID",
-					Value: *pipeline.NewArrayOrString(GenName(fn, false)),
+					Name:  RegisterAPIParamPOperate,
+					Value: *pipeline.NewArrayOrString(strutil.GenName(fn.GroupName, fn.Project, fn.Version)),
 				},
 				{
-					Name:  "APPID",
+					Name:  RegisterAPIParamAppID,
 					Value: *pipeline.NewArrayOrString(appId),
 				},
 			},
-			ServiceAccountName: "builder",
+			ServiceAccountName: RegisterAPIServiceAccount,
 			Workspaces: []pipeline.WorkspaceBinding{
 				{
-					Name:     "source-ws",
+					Name:     RegisterAPIWorkSpace,
 					EmptyDir: &v1.EmptyDirVolumeSource{},
 				},
 			},

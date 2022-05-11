@@ -32,11 +32,6 @@ mysql:
   password: qxp1234
   log: true
 
-
-# ------------------------ k8s --------------------
-k8s:
-  namespace: builder
-
 docker:
   namespace: faas
 
@@ -73,3 +68,6 @@ graph:
       - create
     -
       - push
+
+build-images:
+  go1.16: qxcr.xyz/faas/build-go:v1alpha1

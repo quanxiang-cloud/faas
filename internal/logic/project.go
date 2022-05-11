@@ -45,7 +45,7 @@ type CreateProjectReq struct {
 	Name     string `json:"name"`
 	Alias    string `json:"alias"`
 	Language string `json:"language"`
-	Version  string `json:"tag"`
+	Tag      string `json:"tag"`
 	Describe string `json:"description"`
 	UserID   string `json:"-"`
 }
@@ -82,7 +82,7 @@ func (p *project) CreateProject(ctx context.Context, req *CreateProjectReq) (*Cr
 		Alias:       req.Alias,
 		Describe:    req.Describe,
 		Language:    req.Language,
-		Version:     req.Version,
+		Version:     req.Tag,
 		Status:      models.ProjectSuccessStatus,
 		GroupID:     req.GroupID,
 		UserID:      req.UserID,

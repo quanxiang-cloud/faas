@@ -9,8 +9,7 @@ require (
 	github.com/emicklei/go-restful v2.15.0+incompatible // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gin-gonic/gin v1.7.7
-	github.com/go-logr/logr v1.2.2
-	github.com/go-logr/zapr v1.2.2
+	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
 	github.com/go-openapi/swag v0.19.15 // indirect
@@ -23,7 +22,7 @@ require (
 	github.com/quanxiang-cloud/organizations v1.0.3
 	github.com/tektoncd/pipeline v0.34.1
 	github.com/xanzy/go-gitlab v0.63.0
-	go.uber.org/zap v1.19.1
+	go.uber.org/zap v1.19.1 // indirect
 	google.golang.org/genproto v0.0.0-20220303160752-862486edd9cc // indirect
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/gorm v1.22.4

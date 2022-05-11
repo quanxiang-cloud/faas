@@ -2,7 +2,6 @@ package k8s
 
 import (
 	"context"
-	"fmt"
 	"testing"
 )
 
@@ -144,33 +143,4 @@ func TestRegister(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func TestReverse(t *testing.T) {
-	testCase := []string{
-		"a-b-c",
-		"a-b-c-",
-		"-a-b-c",
-		"a-b",
-	}
-
-	for index, val := range testCase {
-		ret, err := ReverseName(val)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("case %d: %s\n", index, ret)
-	}
-}
-
-func TestGenGIT(t *testing.T) {
-	fn := &Function{
-		Project:   "project",
-		GroupName: "group",
-		Git: &Git{
-			Host: "ssh://git@192.168.201.3:30679/",
-		},
-	}
-
-	fmt.Println(genGitRepo(fn))
 }

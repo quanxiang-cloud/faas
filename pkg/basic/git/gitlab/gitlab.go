@@ -10,6 +10,8 @@ import (
 	"github.com/xanzy/go-gitlab"
 )
 
+// TODO: init repo
+// TODO: bind project
 type GIT struct {
 	git *gitlab.Client
 }

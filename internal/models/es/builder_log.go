@@ -32,11 +32,11 @@ func (b *builderLogRepo) Search(ctx context.Context, id, step string, time time.
 
 	boolQuery := make([]elastic.Query, 0, 2)
 	if step != "" {
-		boolQuery = append(boolQuery, elastic.NewTermQuery(k8s.STEP+".keyword", step))
+		boolQuery = append(boolQuery, elastic.NewTermQuery(k8s.Step+".keyword", step))
 	}
 	boolQuery = append(
 		boolQuery,
-		elastic.NewMatchPhrasePrefixQuery(k8s.RESOURCRREF, id),
+		elastic.NewMatchPhrasePrefixQuery(k8s.ResourceRef, id),
 		elastic.NewRangeQuery("time").Gte(time.UTC()),
 	)
 

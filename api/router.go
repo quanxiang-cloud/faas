@@ -7,6 +7,7 @@ import (
 	mysql2 "github.com/quanxiang-cloud/cabin/tailormade/db/mysql"
 	redis2 "github.com/quanxiang-cloud/cabin/tailormade/db/redis"
 
+	"github.com/quanxiang-cloud/faas/pkg/basic/define/consts"
 	"github.com/quanxiang-cloud/faas/pkg/basic/event"
 	"github.com/quanxiang-cloud/faas/pkg/basic/k8s"
 
@@ -44,7 +45,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 	if err != nil {
 		return nil, err
 	}
-	k8sClient := k8s.NewClient(c.K8s.NameSpace)
+	k8sClient := k8s.NewClient(c, consts.BuildNamespace)
 
 	engine, err := newRouter(c)
 	if err != nil {
