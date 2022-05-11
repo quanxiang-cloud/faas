@@ -126,7 +126,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 		svcApi := NewServing(db, c, k8sClient)
 		{
 			f.POST("/serve", svcApi.serve)
-			f.DELETE("/offline", svcApi.offline)
+			f.DELETE("/offline/:id", svcApi.offline)
 		}
 
 		er := newEvent(db)

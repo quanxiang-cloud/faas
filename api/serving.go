@@ -34,9 +34,6 @@ func (s *Serving) serve(c *gin.Context) {
 
 func (s *Serving) offline(c *gin.Context) {
 	req := &logic.OffLineReq{}
-	if err := c.ShouldBind(req); err != nil {
-		resp.Format(nil, error2.New(code.InvalidParams)).Context(c)
-		return
-	}
+	req.ID = c.Param("id")
 	resp.Format(s.svc.OffLine(header.MutateContext(c), req)).Context(c)
 }

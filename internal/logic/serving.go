@@ -51,7 +51,7 @@ type ServeResp struct {
 
 func (s *serving) Serve(ctx context.Context, req *ServeReq) (*ServeResp, error) {
 	fn := s.functionRepo.Get(ctx, s.db, req.ID)
-	if fn.Status != int(StatusOK) && fn.Status != int(StatusOffline) {
+	if fn.Status != int(StatusOK) && fn.Status != int(StatusOffline) && fn.Status != int(StatusOnlineFailed) {
 		return nil, error2.New(code.ErrDataIllegal)
 	}
 
@@ -113,11 +113,6 @@ func (s *serving) OffLine(ctx context.Context, req *OffLineReq) (*OffLineResp, e
 	fn := s.functionRepo.Get(ctx, s.db, req.ID)
 	if fn.Status != int(StatusOnline) {
 		return nil, error2.New(code.ErrDataIllegal)
-	}
-
-	fn.Status = int(StatusOffline)
-	if err := s.functionRepo.Update(ctx, s.db, fn); err != nil {
-		return nil, err
 	}
 
 	project, err := s.projectRepo.Get(s.db, fn.ProjectID)
