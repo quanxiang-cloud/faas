@@ -80,7 +80,6 @@ type CreateFunctionResponse struct {
 	ID string `json:"id"`
 }
 
-// TODO: default env
 func (g *function) Create(c context.Context, r *CreateFunctionRequest) (*CreateFunctionResponse, error) {
 	data := &models.Function{}
 	data.ID = id.ShortID(0)

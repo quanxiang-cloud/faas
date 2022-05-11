@@ -82,6 +82,7 @@ CREATE TABLE `t_project`
     `project_name` varchar(40) NULL,
     `alias`        varchar(40) NULL,
     `describe`     text,
+    `repo_url`     varchar(200),
     `created_at`   bigint(20) NULL,
     `updated_at`   bigint(20) NULL,
     `created_by`   varchar(64) NULL,

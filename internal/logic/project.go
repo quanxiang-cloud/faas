@@ -79,6 +79,7 @@ func (p *project) CreateProject(ctx context.Context, req *CreateProjectReq) (*Cr
 		ID:          id.StringUUID(),
 		ProjectID:   project.ID,
 		ProjectName: project.Name,
+		RepoUrl:     project.SSHURLToRepo,
 		Alias:       req.Alias,
 		Describe:    req.Describe,
 		Language:    req.Language,
@@ -115,7 +116,8 @@ type GetProjectByIDResp struct {
 	Alias       string `json:"alias"`
 	Status      string `json:"state"`
 	Language    string `json:"language"`
-	Version     string `json:"tag"`
+	Version     string `json:"version"`
+	RepoUrl     string `json:"repoUrl"`
 	CreatedAt   int64  `json:"createdAt"`
 	UpdatedAt   int64  `json:"updatedAt"`
 	CreatedBy   string `json:"creator"`
@@ -136,6 +138,7 @@ func (p *project) GetProjectByID(ctx context.Context, req *GetProjectByIDReq) (*
 		Status:    models.ProjectStatus[project.Status],
 		Language:  project.Language,
 		Version:   project.Version,
+		RepoUrl:   project.RepoUrl,
 		CreatedAt: project.CreatedAt,
 		UpdatedAt: project.UpdatedAt,
 		CreatedBy: project.CreatedBy,
@@ -149,7 +152,8 @@ type Project struct {
 	Alias       string `json:"alias"`
 	Status      string `json:"state"`
 	Language    string `json:"language"`
-	Version     string `json:"tag"`
+	Version     string `json:"version"`
+	RepoUrl     string `json:"repoUrl"`
 	CreatedAt   int64  `json:"createdAt"`
 	UpdatedAt   int64  `json:"updatedAt"`
 	CreatedBy   string `json:"creator"`
@@ -185,6 +189,7 @@ func (p *project) GetList(ctx context.Context, req *GetListReq) (*GetListResp, e
 			Description: project.Describe,
 			Language:    project.Language,
 			Version:     project.Version,
+			RepoUrl:     project.RepoUrl,
 			CreatedAt:   project.CreatedAt,
 			UpdatedAt:   project.UpdatedAt,
 			CreatedBy:   project.CreatedBy,

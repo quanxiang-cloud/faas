@@ -38,6 +38,7 @@ type Project struct {
 	Visibility     string     `json:"visibility"`
 	Name           string     `json:"name"`
 	Path           string     `json:"path"`
+	SSHURLToRepo   string     `json:"sshUrl"`
 	CreatedAt      *time.Time `json:"created_at,omitempty"`
 	LastActivityAt *time.Time `json:"last_activity_at,omitempty"`
 	CreatorID      int        `json:"creator_id"`

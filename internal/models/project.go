@@ -20,6 +20,7 @@ type Project struct {
 	ProjectID   int
 	Alias       string
 	ProjectName string
+	RepoUrl     string
 	Language    string
 	Version     string
 	Status      int
