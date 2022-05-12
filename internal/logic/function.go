@@ -90,7 +90,7 @@ func (g *function) Create(c context.Context, r *CreateFunctionRequest) (*CreateF
 	data.CreatedBy = r.CreatedBy
 	data.DocStatus = consts.DocNotExists
 	if r.Env != nil {
-		marshal, _ := json.Marshal(r.Env)
+		marshal, _ := json.Marshal(appendDefaultEnv(r.Env))
 		data.Env = string(marshal)
 	}
 	group, err := g.groupRepo.Get(g.db, r.GroupID)
