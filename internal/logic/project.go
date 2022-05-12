@@ -2,6 +2,7 @@ package logic
 
 import (
 	"context"
+	"fmt"
 
 	error2 "github.com/quanxiang-cloud/cabin/error"
 	"github.com/quanxiang-cloud/cabin/id"
@@ -20,6 +21,7 @@ type ProjectService interface {
 	GetList(ctx context.Context, req *GetListReq) (*GetListResp, error)
 	DelProject(ctx context.Context, req *DelProjectReq) (*DelProjectResp, error)
 	UpdateDescribe(ctx context.Context, req *UpdateDescribeReq) (*UpdateDescribeResp, error)
+	ListGITProjects(ctx context.Context, req *ListGITProjectsReq) (*ListGITProjectsResp, error)
 }
 
 type project struct {
@@ -80,7 +82,7 @@ func (p *project) CreateProject(ctx context.Context, req *CreateProjectReq) (*Cr
 		ID:          id.StringUUID(),
 		ProjectID:   project.ID,
 		ProjectName: project.Name,
-		RepoUrl:     project.SSHURLToRepo,
+		RepoUrl:     genRepoURl(gitHost.KnownHosts, group.GroupName, req.Name),
 		Alias:       req.Alias,
 		Describe:    req.Describe,
 		Language:    req.Language,
@@ -105,6 +107,10 @@ func (p *project) CreateProject(ctx context.Context, req *CreateProjectReq) (*Cr
 		CreatedBy: pmodel.CreatedBy,
 		CreatedAt: pmodel.CreatedAt,
 	}, nil
+}
+
+func genRepoURl(host, group, project string) string {
+	return fmt.Sprintf("%s%s/%s.git", host, group, project)
 }
 
 type GetProjectByIDReq struct {
@@ -230,3 +236,56 @@ func (p *project) UpdateDescribe(ctx context.Context, req *UpdateDescribeReq) (*
 	}
 	return &UpdateDescribeResp{}, nil
 }
+
+type ListGITProjectsReq struct {
+	GroupID string `json:"groupID"`
+}
+
+type ListGITProjectsResp struct {
+	Projects []GroupProjects `json:"projects"`
+}
+
+type GroupProjects struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+func (p *project) ListGITProjects(ctx context.Context, req *ListGITProjectsReq) (*ListGITProjectsResp, error) {
+	gitHost := p.gitRepo.Get(ctx, p.db)
+	if gitHost == nil {
+		return nil, error2.New(code.ErrDataNotExist)
+	}
+
+	client, err := git2.GetClient(git2.Gitlab, gitHost.Token, gitHost.Host)
+	if err != nil {
+		return nil, err
+	}
+
+	projects, err := client.GetGroupProjects(ctx, req.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]GroupProjects, 0, len(projects))
+	for _, v := range projects {
+		ret = append(ret, GroupProjects{
+			ID:   v.ID,
+			Name: v.Name,
+		})
+	}
+	return &ListGITProjectsResp{
+		Projects: ret,
+	}, nil
+}
+
+// type BindProjectReq struct {
+// 	GroupID string `json:"-"`
+// 	UserID  string `json:"-"`
+// }
+
+// type BindProjectResp struct {
+// }
+
+// func (p *project) BindProject(ctx context.Context, req *BindProjectReq) (*BindProjectResp, error) {
+
+// }

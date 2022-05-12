@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	error2 "github.com/quanxiang-cloud/cabin/error"
+	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	ginheader "github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/cabin/tailormade/resp"
 	"github.com/quanxiang-cloud/faas/internal/logic"
@@ -77,4 +78,10 @@ func (p *ProjectAPI) UpdDescribe(c *gin.Context) {
 	req.ProjectID = c.Param("projectID")
 	ctx := ginheader.MutateContext(c)
 	resp.Format(p.projectService.UpdateDescribe(ctx, req)).Context(c)
+}
+
+func (p *ProjectAPI) ListGITProjects(c *gin.Context) {
+	req := &logic.ListGITProjectsReq{}
+	req.GroupID = c.Param("groupID")
+	resp.Format(p.projectService.ListGITProjects(header.MutateContext(c), req)).Context(c)
 }

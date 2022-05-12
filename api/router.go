@@ -96,6 +96,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 			g.POST("/group.bind", groupAPI.BindGroup)
 			g.POST("/:groupID/member", groupAPI.AddMember)
 			g.GET("/:groupID/projects", projectAPI.GetList)
+			g.GET("/:groupID/projects/repo", projectAPI.ListGITProjects)
 		}
 		group := v1.Group("/group")
 		check := v1.Group("/check")
