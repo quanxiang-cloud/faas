@@ -264,6 +264,7 @@ func (g *function) Get(c context.Context, r *GetFunctionRequest) (*GetFunctionRe
 		Status:      data.Status,
 		DocStatus:   data.DocStatus,
 		ResourceRef: data.ResourceRef,
+		BuiltAt:     data.BuiltAt,
 	}
 	return res, nil
 
@@ -446,6 +447,7 @@ func (g *function) List(c context.Context, r *ListRequest) (*ListResponse, error
 			Name:        fns[k].Name,
 			CreatedBy:   fns[k].CreatedBy,
 			CreatedAt:   fns[k].CreatedAt,
+			BuiltAt:     fns[k].BuiltAt,
 		})
 
 	}
