@@ -53,7 +53,7 @@ type CreateProjectReq struct {
 type CreateProjectResp struct {
 	ID        string `json:"id"`
 	RepoUrl   string `json:"repoUrl"`
-	CreatedAt int64  `json:"createAt"`
+	CreatedAt int64  `json:"createdAt"`
 	CreatedBy string `json:"creator"`
 }
 
