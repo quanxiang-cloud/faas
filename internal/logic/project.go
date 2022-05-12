@@ -52,6 +52,7 @@ type CreateProjectReq struct {
 
 type CreateProjectResp struct {
 	ID        string `json:"id"`
+	RepoUrl   string `json:"repoUrl"`
 	CreatedAt int64  `json:"createAt"`
 	CreatedBy string `json:"creator"`
 }
@@ -100,6 +101,7 @@ func (p *project) CreateProject(ctx context.Context, req *CreateProjectReq) (*Cr
 	tx.Commit()
 	return &CreateProjectResp{
 		ID:        pmodel.ID,
+		RepoUrl:   pmodel.RepoUrl,
 		CreatedBy: pmodel.CreatedBy,
 		CreatedAt: pmodel.CreatedAt,
 	}, nil
