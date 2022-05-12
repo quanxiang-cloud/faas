@@ -44,6 +44,7 @@ func NewProjectService(ctx context.Context, db *gorm.DB, conf *config.Config) Pr
 
 type CreateProjectReq struct {
 	GroupID  string `json:"-"`
+	ID       int    `json:"id"`
 	Name     string `json:"name"`
 	Alias    string `json:"alias"`
 	Language string `json:"language"`
@@ -73,15 +74,14 @@ func (p *project) CreateProject(ctx context.Context, req *CreateProjectReq) (*Cr
 	}
 
 	group, err := p.groupRepo.Get(p.db, req.GroupID)
-	project, err := client.CreateProject(ctx, req.Name, group.GroupID)
 	if err != nil {
-		tx.Rollback()
 		return nil, err
 	}
+
 	pmodel := &models.Project{
 		ID:          id.StringUUID(),
-		ProjectID:   project.ID,
-		ProjectName: project.Name,
+		ProjectID:   req.ID,
+		ProjectName: req.Name,
 		RepoUrl:     genRepoURl(gitHost.KnownHosts, group.GroupName, req.Name),
 		Alias:       req.Alias,
 		Describe:    req.Describe,
@@ -95,6 +95,16 @@ func (p *project) CreateProject(ctx context.Context, req *CreateProjectReq) (*Cr
 		CreatedAt:   time.NowUnix(),
 		UpdatedAt:   time.NowUnix(),
 	}
+
+	if req.ID == 0 {
+		project, err := client.CreateProject(ctx, req.Name, group.GroupID)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		pmodel.ProjectID = project.ID
+	}
+
 	err = p.projectRepo.Insert(tx, pmodel)
 	if err != nil {
 		tx.Rollback()
@@ -277,15 +287,3 @@ func (p *project) ListGITProjects(ctx context.Context, req *ListGITProjectsReq) 
 		Projects: ret,
 	}, nil
 }
-
-// type BindProjectReq struct {
-// 	GroupID string `json:"-"`
-// 	UserID  string `json:"-"`
-// }
-
-// type BindProjectResp struct {
-// }
-
-// func (p *project) BindProject(ctx context.Context, req *BindProjectReq) (*BindProjectResp, error) {
-
-// }
