@@ -266,12 +266,17 @@ func (p *project) ListGITProjects(ctx context.Context, req *ListGITProjectsReq) 
 		return nil, error2.New(code.ErrDataNotExist)
 	}
 
+	group, err := p.groupRepo.Get(p.db, req.GroupID)
+	if err != nil {
+		return nil, err
+	}
+
 	client, err := git2.GetClient(git2.Gitlab, gitHost.Token, gitHost.Host)
 	if err != nil {
 		return nil, err
 	}
 
-	projects, err := client.GetGroupProjects(ctx, req.GroupID)
+	projects, err := client.GetGroupProjects(ctx, group.GroupID)
 	if err != nil {
 		return nil, err
 	}
