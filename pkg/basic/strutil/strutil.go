@@ -13,13 +13,13 @@ func JoinImage(version string, path ...string) string {
 	return JoinPath("", fmt.Sprintf(":%s", version), path...)
 }
 
-func JoinPath(schema, suffix string, path ...string) string {
+func JoinPath(prefix, suffix string, path ...string) string {
 	p := path[:0]
 	for _, s := range path {
 		p = append(p, clean(s))
 	}
 	s := strings.Join(path, "/")
-	return fmt.Sprintf("%s://%s%s", schema, s, suffix)
+	return fmt.Sprintf("%s%s%s", prefix, s, suffix)
 }
 
 func GenName(s ...string) string {

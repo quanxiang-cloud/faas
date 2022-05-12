@@ -305,7 +305,7 @@ func (g *function) Build(c context.Context, r *BuildFunctionRequest) (*BuildFunc
 
 	builder, err := g.k8sc.GetBuilder(project.Language, project.Version)
 	if err != nil {
-		return nil, err
+		return nil, error2.New(code.ErrNotSupportedLanguage, project.Language, project.Version)
 	}
 	return &BuildFunctionResponse{}, g.k8sc.Build(c, &k8s.Function{
 		Version:   fnData.Version,
