@@ -317,7 +317,7 @@ func (p *project) InitProject(ctx context.Context, req *InitProjectReq) (*InitPr
 		}
 
 		for _, template := range p.config.Templates {
-			if err := git.CreateFile(ctx, project.ProjectID, template.FullName, template.Content); err != nil {
+			if err := git.CreateFile(ctx, project.ProjectID, template.FullName, template.Content, template.Branch, template.Commit); err != nil {
 				return nil, err
 			}
 		}

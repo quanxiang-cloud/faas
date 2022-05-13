@@ -41,6 +41,8 @@ type Docker struct {
 
 type Template struct {
 	FullName string `yaml:"full_name"`
+	Branch   string `yaml:"branch"`
+	Commit   string `yaml:"commit"`
 	Content  string `yaml:"content"`
 }
 

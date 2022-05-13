@@ -27,5 +27,5 @@ type GIT interface {
 	GetProjectByID(ctx context.Context, id int) (*define.Project, error)
 	GetGroupProjects(ctx context.Context, gid interface{}) ([]*define.Project, error)
 
-	CreateFile(ctx context.Context, pid int, fullName string, content string) error
+	CreateFile(ctx context.Context, pid int, fullName, content, branch, commit string) error
 }

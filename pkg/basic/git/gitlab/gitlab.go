@@ -305,9 +305,11 @@ func (g *GIT) CreateUserToken(ctx context.Context, uid int) (string, error) {
 	return token.Token, nil
 }
 
-func (g *GIT) CreateFile(ctx context.Context, pid int, fullName string, content string) error {
+func (g *GIT) CreateFile(ctx context.Context, pid int, fullName, content, branch, commit string) error {
 	_, _, err := g.git.RepositoryFiles.CreateFile(pid, fullName, &gitlab.CreateFileOptions{
-		Content: &content,
+		Branch:        &branch,
+		CommitMessage: &commit,
+		Content:       &content,
 	})
 	return err
 }
