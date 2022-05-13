@@ -42,7 +42,7 @@ func (g *functionRepo) Search(ctx context.Context, db *gorm.DB, projectID, group
 	db.Model(&models.Function{}).Count(&num)
 	newPage := page2.NewPage(page, limit, num)
 
-	db = db.Limit(newPage.PageSize).Offset(newPage.StartIndex)
+	db = db.Limit(newPage.PageSize).Offset(newPage.StartIndex).Order("created_at DESC")
 	affected := db.Find(&functions).RowsAffected
 	if affected > 0 {
 		return functions, num
