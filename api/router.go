@@ -112,6 +112,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 			project.GET("/:projectID", projectAPI.GetProjectByID)
 			project.PATCH("/:projectID/desc", projectAPI.UpdDescribe)
 			project.DELETE("/:projectID", projectAPI.DelProject)
+			project.POST("/:projectID/init", projectAPI.InitProject)
 		}
 		fnAPI := NewFunctionAPI(ctx, c, db, k8sClient, redisClient, esClient)
 		f := project.Group("")

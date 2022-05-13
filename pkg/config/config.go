@@ -31,11 +31,17 @@ type Config struct {
 	} `yaml:"graph,omitempty"`
 
 	BuildImages map[string]string `yaml:"build-images"`
+	Templates   []*Template       `yaml:"templates"`
 }
 
 // Docker docker
 type Docker struct {
 	NameSpace string `yaml:"namespace"`
+}
+
+type Template struct {
+	FullName string `yaml:"full_name"`
+	Content  string `yaml:"content"`
 }
 
 // NewConfig new
