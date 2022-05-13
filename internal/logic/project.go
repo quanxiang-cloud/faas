@@ -179,9 +179,9 @@ type Project struct {
 
 type GetListReq struct {
 	GroupID string `json:"-"`
-	Alias   string `json:"alias"`
-	Page    int    `json:"page"`
-	Size    int    `json:"size"`
+	Alias   string `json:"alias" form:"alias"`
+	Page    int    `json:"page" form:"page"`
+	Size    int    `json:"size" form:"size"`
 }
 
 type GetListResp struct {
