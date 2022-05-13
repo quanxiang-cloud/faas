@@ -22,6 +22,7 @@ type ProjectService interface {
 	DelProject(ctx context.Context, req *DelProjectReq) (*DelProjectResp, error)
 	UpdateDescribe(ctx context.Context, req *UpdateDescribeReq) (*UpdateDescribeResp, error)
 	ListGITProjects(ctx context.Context, req *ListGITProjectsReq) (*ListGITProjectsResp, error)
+	InitProject(ctx context.Context, req *InitProjectReq) (*InitProjectResp, error)
 }
 
 type project struct {
@@ -30,6 +31,7 @@ type project struct {
 	gitRepo       models.GitRepo
 	groupRepo     models.GroupRepo
 	userGroupRepo models.UserGroupRepo
+	config        *config.Config
 }
 
 func NewProjectService(ctx context.Context, db *gorm.DB, conf *config.Config) ProjectService {
@@ -39,6 +41,7 @@ func NewProjectService(ctx context.Context, db *gorm.DB, conf *config.Config) Pr
 		gitRepo:       mysql.NewGitRepo(),
 		groupRepo:     mysql.NewGroupRepo(),
 		userGroupRepo: mysql.NewUserGroupRepo(),
+		config:        conf,
 	}
 }
 
@@ -291,4 +294,34 @@ func (p *project) ListGITProjects(ctx context.Context, req *ListGITProjectsReq) 
 	return &ListGITProjectsResp{
 		Projects: ret,
 	}, nil
+}
+
+type InitProjectReq struct {
+	ProjectID string `json:"projectID"`
+}
+
+type InitProjectResp struct {
+}
+
+func (p *project) InitProject(ctx context.Context, req *InitProjectReq) (*InitProjectResp, error) {
+	project, err := p.projectRepo.Get(p.db, req.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+	gitRepo := p.gitRepo.Get(ctx, p.db)
+
+	if project != nil {
+		git, err := git2.GetClient(git2.Gitlab, gitRepo.Token, gitRepo.Host)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, template := range p.config.Templates {
+			if err := git.CreateFile(ctx, project.ProjectID, template.FullName, template.Content); err != nil {
+				return nil, err
+			}
+		}
+		return &InitProjectResp{}, nil
+	}
+	return nil, error2.New(code.ErrDataNotExist)
 }

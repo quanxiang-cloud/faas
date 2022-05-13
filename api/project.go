@@ -85,3 +85,9 @@ func (p *ProjectAPI) ListGITProjects(c *gin.Context) {
 	req.GroupID = c.Param("groupID")
 	resp.Format(p.projectService.ListGITProjects(header.MutateContext(c), req)).Context(c)
 }
+
+func (p *ProjectAPI) InitProject(c *gin.Context) {
+	req := &logic.InitProjectReq{}
+	req.ProjectID = c.Param("projectID")
+	resp.Format(p.projectService.InitProject(header.MutateContext(c), req)).Context(c)
+}
