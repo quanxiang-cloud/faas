@@ -284,7 +284,7 @@ func (g *GIT) GetGroupProjects(ctx context.Context, gid interface{}) ([]*define.
 			CreatedAt:      project.CreatedAt,
 			LastActivityAt: project.LastActivityAt,
 			CreatorID:      project.CreatorID,
-		}, nil)
+		})
 	}
 	return projectsResp, nil
 }
