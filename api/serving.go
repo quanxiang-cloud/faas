@@ -3,6 +3,7 @@ package restful
 import (
 	"github.com/gin-gonic/gin"
 	error2 "github.com/quanxiang-cloud/cabin/error"
+	"github.com/quanxiang-cloud/cabin/logger"
 	"github.com/quanxiang-cloud/cabin/tailormade/header"
 	"github.com/quanxiang-cloud/cabin/tailormade/resp"
 	"github.com/quanxiang-cloud/faas/internal/logic"
@@ -16,8 +17,8 @@ type Serving struct {
 	svc logic.Serving
 }
 
-func NewServing(db *gorm.DB, config *config.Config, kc k8s.Client) *Serving {
-	svc := logic.NewServing(db, config)
+func NewServing(db *gorm.DB, config *config.Config, kc k8s.Client, log logger.AdaptedLogger) *Serving {
+	svc := logic.NewServing(db, log, config)
 	return &Serving{
 		svc: svc,
 	}

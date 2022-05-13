@@ -126,7 +126,7 @@ func NewRouter(ctx context.Context, c *config.Config, log logger.AdaptedLogger) 
 			f.POST("/regSwagger", fnAPI.RegSwagger)
 			f.PATCH("/:projectID/:functionID/desc", fnAPI.UpdateDescribe)
 		}
-		svcApi := NewServing(db, c, k8sClient)
+		svcApi := NewServing(db, c, k8sClient, log)
 		{
 			f.POST("/serve", svcApi.serve)
 			f.DELETE("/offline/:id", svcApi.offline)

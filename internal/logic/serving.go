@@ -20,6 +20,7 @@ type Serving interface {
 	OffLine(ctx context.Context, req *OffLineReq) (*OffLineResp, error)
 }
 
+// FIXME: log init
 type serving struct {
 	log          logger.AdaptedLogger
 	db           *gorm.DB
@@ -31,7 +32,7 @@ type serving struct {
 	k8sc         k8s.Client
 }
 
-func NewServing(db *gorm.DB, conf *config.Config) Serving {
+func NewServing(db *gorm.DB, log logger.AdaptedLogger, conf *config.Config) Serving {
 	return &serving{
 		db:           db,
 		conf:         conf,
