@@ -41,6 +41,7 @@ func NewServing(db *gorm.DB, log logger.AdaptedLogger, conf *config.Config) Serv
 		projectRepo:  mysql.NewProjectRepo(),
 		groupRepo:    mysql.NewGroupRepo(),
 		k8sc:         k8s.NewClient(conf, consts.ServingNamespace),
+		log:          log,
 	}
 }
 
