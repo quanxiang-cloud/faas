@@ -8,7 +8,7 @@ const (
 const (
 	DefaultEnvFuncClearSource = "FUNC_CLEAR_SOURCE"
 	DefaultEnvFuncName        = "FUNC_NAME"
-	DefaultEnvGoProxy         = "GOPROXY"
+	DefaultEnvGoProxy         = "FUNC_GOPROXY"
 
 	DefaultEnvFuncClearSourceVal = "true"
 	DefaultEnvFuncNameVal        = "Handle"
