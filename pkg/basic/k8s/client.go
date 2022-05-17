@@ -288,6 +288,10 @@ func genServingEnv(c *client, fn *Function) []v1.EnvVar {
 		v1.EnvVar{
 			Name:  "POD_NAMESPACE",
 			Value: c.k8sNamespace,
+		},
+		v1.EnvVar{
+			Name:  "LOWCODE_NAMESPACE",
+			Value: ".lowcode",
 		})
 
 	return env
