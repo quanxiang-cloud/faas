@@ -275,13 +275,15 @@ func genServingEnv(c *client, fn *Function) []v1.EnvVar {
 			Value: fmt.Sprintf("{\"name\":\"%s\",\"version\":\"v2.0.0\",\"runtime\":\"Knative\",\"port\":\"8080\", \"prePlugins\":[\"plugin-quanxiang-lowcode-client\"]}", strutil.GenName(fn.Version, fn.Project, fn.GroupName)),
 		},
 		v1.EnvVar{
-			Name: "POD_NAME",
-			ValueFrom: &v1.EnvVarSource{
-				FieldRef: &v1.ObjectFieldSelector{
-					APIVersion: "v1",
-					FieldPath:  "metadata.name",
-				},
-			},
+			Name:  "POD_NAME",
+			Value: "serving",
+			// BUG: knative
+			// ValueFrom: &v1.EnvVarSource{
+			// 	FieldRef: &v1.ObjectFieldSelector{
+			// 		APIVersion: "v1",
+			// 		FieldPath:  "metadata.name",
+			// 	},
+			// },
 		},
 		v1.EnvVar{
 			Name:  "POD_NAMESPACE",
