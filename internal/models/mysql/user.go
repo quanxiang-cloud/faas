@@ -13,7 +13,7 @@ func NewUserRepo() models.UserRepo {
 }
 
 func (u *userRepo) getTable(db *gorm.DB) *gorm.DB {
-	return db.Table("t_user")
+	return db.Table("users")
 }
 
 func (u *userRepo) Insert(db *gorm.DB, user *models.User) error {

@@ -13,7 +13,7 @@ func NewProjectRepo() models.ProjectRepo {
 }
 
 func (g *projectRepo) getTable(db *gorm.DB) *gorm.DB {
-	return db.Table("t_project")
+	return db.Table("projects")
 }
 
 func (g *projectRepo) Insert(db *gorm.DB, project *models.Project) error {

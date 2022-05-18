@@ -13,7 +13,7 @@ func NewUserGroupRepo() models.UserGroupRepo {
 }
 
 func (u *userGroupRepo) getTable(db *gorm.DB) *gorm.DB {
-	return db.Table("t_user_group")
+	return db.Table("user_group")
 }
 
 func (u *userGroupRepo) Insert(db *gorm.DB, userGroup *models.UserGroup) error {
