@@ -2,14 +2,15 @@ package k8s
 
 // Function Function
 type Function struct {
-	ID        string
-	Version   string
-	Project   string
-	GroupName string
-	Git       *Git
-	Docker    *Docker
-	Builder   string
-	ENV       map[string]string
+	ID           string
+	Version      string
+	Project      string
+	ProjectTitle string
+	GroupName    string
+	Git          *Git
+	Docker       *Docker
+	Builder      string
+	ENV          map[string]string
 }
 
 // Docker Docker
@@ -42,10 +43,12 @@ const (
 
 	RegisterAPIPipeline = "register-polyapi"
 
-	RegisterAPIParamSourceURL = "SOURCE_URL"
-	RegisterAPIParamProject   = "PROJECT_NAME"
-	RegisterAPIParamPOperate  = "OPERATE_ID"
-	RegisterAPIParamAppID     = "APPID"
+	RegisterAPIParamSourceURL    = "SOURCE_URL"
+	RegisterAPIParamProject      = "PROJECT_NAME"
+	RegisterAPIParamProjectTitle = "PROJECT_TITLE"
+	RegisterAPIParamGroup        = "GROUP_NAME"
+	RegisterAPIParamPOperate     = "OPERATE_ID"
+	RegisterAPIParamAppID        = "APPID"
 
 	RegisterAPIServiceAccount = "builder"
 	RegisterAPIWorkSpace      = "source-ws"

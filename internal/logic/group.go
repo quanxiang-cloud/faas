@@ -10,6 +10,7 @@ import (
 	"github.com/quanxiang-cloud/faas/internal/models/mysql"
 	"github.com/quanxiang-cloud/faas/pkg/basic/define/code"
 	git2 "github.com/quanxiang-cloud/faas/pkg/basic/git"
+	"github.com/quanxiang-cloud/faas/pkg/client"
 	"github.com/quanxiang-cloud/faas/pkg/config"
 	"gorm.io/gorm"
 )
@@ -29,6 +30,7 @@ type groupService struct {
 	groupRepo     models.GroupRepo
 	gitRepo       models.GitRepo
 	userGroupRepo models.UserGroupRepo
+	client        *client.Client
 }
 
 func NewGroupService(ctx context.Context, db *gorm.DB, conf *config.Config) GroupService {
@@ -38,6 +40,7 @@ func NewGroupService(ctx context.Context, db *gorm.DB, conf *config.Config) Grou
 		groupRepo:     mysql.NewGroupRepo(),
 		gitRepo:       mysql.NewGitRepo(),
 		userGroupRepo: mysql.NewUserGroupRepo(),
+		client:        client.New(conf),
 	}
 }
 
@@ -45,6 +48,7 @@ func NewGroupService(ctx context.Context, db *gorm.DB, conf *config.Config) Grou
 type CreateGroupReq struct {
 	AppID    string `json:"appID"`
 	Group    string `json:"name"`
+	Title    string `json:"title"`
 	Describe string `json:"describe"`
 	UserID   string `json:"-"`
 }
@@ -85,6 +89,7 @@ func (g *groupService) CreateGroup(ctx context.Context, req *CreateGroupReq) (*C
 	groupInfo := &models.Group{
 		ID:        id.StringUUID(),
 		GroupName: group.Name,
+		Title:     req.Title,
 		GroupID:   group.ID,
 		Describe:  req.Describe,
 		AppID:     req.AppID,
@@ -99,6 +104,12 @@ func (g *groupService) CreateGroup(ctx context.Context, req *CreateGroupReq) (*C
 		tx.Rollback()
 		return nil, err
 	}
+
+	if err := g.client.CreateNamespace(ctx, req.AppID, group.Name, req.Title); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
 	tx.Commit()
 	return &CreateGroupResp{
 		GroupID: groupInfo.ID,
@@ -213,6 +224,7 @@ func (g *groupService) CheckMember(ctx context.Context, req *CheckMemberReq) (*C
 // BindGroupReq BindGroupReq
 type BindGroupReq struct {
 	GID      int    `json:"gid"`
+	Title    string `json:"title"`
 	Describe string `json:"describe"`
 	AppID    string `json:"appID"`
 	UserID   string `json:"-"`
@@ -252,6 +264,7 @@ func (g *groupService) BindGroup(ctx context.Context, req *BindGroupReq) (*BindG
 	groupInfo := &models.Group{
 		ID:        id.StringUUID(),
 		GroupName: group.Name,
+		Title:     req.Title,
 		GroupID:   group.ID,
 		Describe:  group.Description,
 		AppID:     req.AppID,
@@ -266,6 +279,12 @@ func (g *groupService) BindGroup(ctx context.Context, req *BindGroupReq) (*BindG
 		tx.Rollback()
 		return nil, err
 	}
+
+	if err := g.client.CreateNamespace(ctx, req.AppID, group.Name, req.Title); err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
 	tx.Commit()
 	return &BindGroupResp{
 		GroupID: groupInfo.ID,

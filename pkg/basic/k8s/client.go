@@ -317,8 +317,16 @@ func (c *client) RegistAPI(ctx context.Context, fn *Function, appId string) erro
 					Value: *pipeline.NewArrayOrString(fn.Project),
 				},
 				{
+					Name:  RegisterAPIParamProjectTitle,
+					Value: *pipeline.NewArrayOrString(fn.ProjectTitle),
+				},
+				{
+					Name:  RegisterAPIParamGroup,
+					Value: *pipeline.NewArrayOrString(fn.GroupName),
+				},
+				{
 					Name:  RegisterAPIParamPOperate,
-					Value: *pipeline.NewArrayOrString(strutil.GenName(fn.GroupName, fn.Project, fn.Version)),
+					Value: *pipeline.NewArrayOrString(fn.Version),
 				},
 				{
 					Name:  RegisterAPIParamAppID,

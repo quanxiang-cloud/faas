@@ -6,6 +6,7 @@ type Group struct {
 	ID        string
 	GroupID   int
 	GroupName string
+	Title     string
 	Describe  string
 	CreatedAt int64
 	UpdatedAt int64

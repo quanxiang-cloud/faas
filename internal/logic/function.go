@@ -484,9 +484,10 @@ func (g *function) RegSwagger(c context.Context, r *RegSwaggerReq) (*RegSwaggerR
 	git := g.gitRepo.Get(c, g.db)
 
 	err = g.k8sc.RegistAPI(c, &k8s.Function{
-		Version:   fn.Version,
-		Project:   project.ProjectName,
-		GroupName: group.GroupName,
+		Version:      fn.Version,
+		Project:      project.ProjectName,
+		ProjectTitle: project.Alias,
+		GroupName:    group.GroupName,
 		Git: &k8s.Git{
 			Name: git.Name,
 			Host: git.KnownHosts,

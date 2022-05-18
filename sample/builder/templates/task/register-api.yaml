@@ -9,6 +9,8 @@ spec:
   params:
     - name: PROJECT_NAME
       description: A git repo url where the source code resides.
+    - name: PROJECT_TITLE
+      description: A alias of param.PROJECT_NAME
     - name: SWAGGER_IMAGE
       description: A name of  that  base image  swaager
     - name: OPERATE_ID
@@ -208,6 +210,6 @@ spec:
             "schema": "http",
             "host":  "'$(params.HOST)'",
             "authType": "none",
-            "autoCreateNamespaceTitle": "faas"
+            "autoCreateNamespaceTitle": "$(params.PROJECT_TITLE)"
         }' > polyAPI.log
         cat polyAPI.log

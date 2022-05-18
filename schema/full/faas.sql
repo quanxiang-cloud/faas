@@ -82,6 +82,7 @@ create table groups
         primary key,
     group_id   int         null,
     group_name varchar(40) null,
+    Title      varchar(64),
     `describe` text        null,
     created_at bigint      null,
     updated_at bigint      null,
