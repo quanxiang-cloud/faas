@@ -96,17 +96,16 @@ templates:
 
     // Handler function as a server handler
     // @tags handler
-    // @Summary handler summary
+    // @Summary TODO: write your function name
     // @Description handler description
     // @Produce json
-    // @Param request body string true "request"
+    // @Param request body Request true "request"
     // @Success 200 {object} Response
     // @Router / [post]
     func Handle(w http.ResponseWriter, r *http.Request) {
       ctx := r.Context()
       _, ok := ctx.Value(lowcode.LOWCODE).(lowcode.Lowcode)
       if !ok {
-        fmt.Printf("error")
         return
       }
 
