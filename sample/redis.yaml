@@ -1,0 +1,16 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: faas-redis-pubsub
+spec:
+  metadata:
+    - name: redisType
+      value: cluster
+    - name: redisHost
+      value: 192.168.201.14:6379,192.168.201.15:6379,192.168.201.16:6379
+    - name: authRequired
+      value: "false"
+    - name: maxMessageBytes
+      value: 1024
+  type: pubsub.redis
+  version: v1

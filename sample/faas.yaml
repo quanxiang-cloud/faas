@@ -10,6 +10,9 @@ metadata:
     app.kubernetes.io/version: v1
     version: v1
   annotations:
+    dapr.io/app-id: faas-dapr
+    dapr.io/app-port: '80'
+    dapr.io/enabled: 'true'
     deployment.kubernetes.io/revision: '27'
     dev.nocalhost/dev-mode-count: '1'
     kubesphere.io/creator: weitao
@@ -26,7 +29,6 @@ spec:
       version: v1
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: faas
         app.kubernetes.io/name: backend
@@ -34,7 +36,6 @@ spec:
         version: v1
       annotations:
         kubesphere.io/containerSecrets: '{"container":"docker-registry"}'
-        kubesphere.io/restartedAt: '2022-04-25T08:29:07.033Z'
         logging.kubesphere.io/logsidecar-config: '{}'
         sidecar.istio.io/inject: 'false'
     spec:
@@ -45,7 +46,7 @@ spec:
             defaultMode: 420
       containers:
         - name: container
-          image: 'qxcr.xyz/lowcode/faas:v0.0.19'
+          image: 'qxcr.xyz/lowcode/faas:v0.0.5'
           ports:
             - name: faas
               containerPort: 80

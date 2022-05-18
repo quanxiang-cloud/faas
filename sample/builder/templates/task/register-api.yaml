@@ -207,6 +207,7 @@ spec:
             "singleName": "'$(params.OPERATE_ID)'",
             "schema": "http",
             "host":  "'$(params.HOST)'",
-            "authType": "none"
+            "authType": "none",
+            "autoCreateNamespaceTitle": "faas"
         }' > polyAPI.log
         cat polyAPI.log

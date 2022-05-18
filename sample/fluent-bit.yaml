@@ -93,7 +93,4 @@ spec:
         - operator: Exists
   updateStrategy:
     type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 0
   revisionHistoryLimit: 10

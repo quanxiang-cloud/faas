@@ -5,9 +5,6 @@ metadata:
   namespace: lowcode
   labels:
     app: implant
-  annotations:
-    deployment.kubernetes.io/revision: '6'
-    kubesphere.io/creator: charliecha
 spec:
   replicas: 0
   selector:
@@ -15,21 +12,23 @@ spec:
       app: implant
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: implant
       annotations:
-        kubesphere.io/restartedAt: '2022-04-22T10:04:11.028Z'
+        dapr.io/app-id: implant-dapr
+        dapr.io/enabled: 'true'
     spec:
       containers:
-        - name: container-nps9q0
-          image: 'qxcr.xyz/lowcode/implant:v0.0.3'
+        - name: implant
+          image: 'qxcr.xyz/lowcode/implant:v0.0.6'
           command:
-            - ./cmd/implant
-            - '-fn-update'
-            - 'http://faas/api/v1/faas/group/-/project/update/status'
-            - '-doc-update'
-            - 'http://faas/api/v1/faas/group/-/project/update/doc'
+            - /ko-app/main.go
+            - '-fn-namespace'
+            - builder
+            - '-svc-namespace'
+            - serving
+            - '-pubsub'
+            - faas-redis-pubsub
           resources: {}
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
