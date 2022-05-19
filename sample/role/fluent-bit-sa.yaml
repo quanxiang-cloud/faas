@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: fluentbitds
+  namespace: builder
+secrets:
+  - name: fluentbitds-token-rj4cf

@@ -1,0 +1,51 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: implant
+  namespace: lowcode
+  labels:
+    app: implant
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      app: implant
+  template:
+    metadata:
+      labels:
+        app: implant
+      annotations:
+        dapr.io/app-id: implant-dapr
+        dapr.io/enabled: 'true'
+    spec:
+      containers:
+        - name: implant
+          image: 'qxcr.xyz/lowcode/implant:v0.0.6'
+          command:
+            - /ko-app/main.go
+            - '-fn-namespace'
+            - builder
+            - '-svc-namespace'
+            - serving
+            - '-pubsub'
+            - faas-redis-pubsub
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      serviceAccountName: implantsa
+      serviceAccount: implantsa
+      securityContext: {}
+      imagePullSecrets:
+        - name: qxcr
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600

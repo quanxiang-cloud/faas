@@ -1,0 +1,78 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: faas
+  namespace: lowcode
+  labels:
+    app: faas
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: backend
+    app.kubernetes.io/version: v1
+    version: v1
+  annotations:
+    dapr.io/app-id: faas-dapr
+    dapr.io/app-port: '80'
+    dapr.io/enabled: 'true'
+    deployment.kubernetes.io/revision: '27'
+    dev.nocalhost/dev-mode-count: '1'
+    kubesphere.io/creator: weitao
+    meta.helm.sh/release-name: faas
+    meta.helm.sh/release-namespace: lowcode
+    servicemesh.kubesphere.io/enabled: 'false'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: faas
+      app.kubernetes.io/name: backend
+      app.kubernetes.io/version: v1
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: faas
+        app.kubernetes.io/name: backend
+        app.kubernetes.io/version: v1
+        version: v1
+      annotations:
+        kubesphere.io/containerSecrets: '{"container":"docker-registry"}'
+        logging.kubesphere.io/logsidecar-config: '{}'
+        sidecar.istio.io/inject: 'false'
+    spec:
+      volumes:
+        - name: volume
+          configMap:
+            name: faas
+            defaultMode: 420
+      containers:
+        - name: container
+          image: 'qxcr.xyz/lowcode/faas:v0.0.5'
+          ports:
+            - name: faas
+              containerPort: 80
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - name: volume
+              readOnly: true
+              mountPath: configs/
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      serviceAccountName: qxp-faas
+      serviceAccount: qxp-faas
+      securityContext: {}
+      imagePullSecrets:
+        - name: lowcode
+      affinity: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
