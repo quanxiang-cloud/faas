@@ -100,6 +100,7 @@ func (c *client) CreateGitSSH(ctx context.Context, host, ssh string) error {
 		tenantID = TenantDefault
 	}
 	data := make(map[string][]byte)
+	// ssh-keyscan github.com | base64
 	data["known_hosts"] = []byte(host)
 	data["ssh-privatekey"] = []byte(ssh)
 
