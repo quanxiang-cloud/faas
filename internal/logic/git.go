@@ -33,10 +33,11 @@ func NewGit(c context.Context, db *gorm.DB) Git {
 }
 
 type CreateGitRequest struct {
-	Host       string `json:"host"`
-	KnownHosts string `json:"knownHosts"`
-	Token      string `json:"token"`
-	SSH        string `json:"ssh"`
+	Host              string `json:"host"`
+	KnownHosts        string `json:"knownHosts"`
+	KeyScanKnownHosts string `json:"keyScanKnownHosts"`
+	Token             string `json:"token"`
+	SSH               string `json:"ssh"`
 }
 type CreateGitResponse struct {
 }
@@ -52,6 +53,7 @@ func (g *git) Create(c context.Context, r *CreateGitRequest) (*CreateGitResponse
 	data.Token = r.Token
 	data.SSH = r.SSH
 	data.KnownHosts = r.KnownHosts
+	data.KeyScanKnownHosts = r.KeyScanKnownHosts
 	unix := time.NowUnix()
 	data.CreatedAt = unix
 	data.UpdatedAt = unix
@@ -59,9 +61,12 @@ func (g *git) Create(c context.Context, r *CreateGitRequest) (*CreateGitResponse
 }
 
 type UpdateGitRequest struct {
-	ID    string `json:"id"`
-	Host  string `json:"host"`
-	Token string `json:"token"`
+	ID                string `json:"id"`
+	Host              string `json:"host"`
+	Token             string `json:"token"`
+	SSH               string `json:"ssh"`
+	KnownHosts        string `json:"knownHosts"`
+	KeyScanKnownHosts string `json:"keyScanKnownHosts"`
 }
 type UpdateGitResponse struct {
 }
@@ -73,6 +78,9 @@ func (g *git) Update(c context.Context, r *UpdateGitRequest) (*UpdateGitResponse
 	}
 	data.Host = r.Host
 	data.Token = r.Token
+	data.SSH = r.SSH
+	data.KnownHosts = r.KnownHosts
+	data.KeyScanKnownHosts = r.KeyScanKnownHosts
 	unix := time.NowUnix()
 	data.UpdatedAt = unix
 	return &UpdateGitResponse{}, g.gitRepo.Update(c, g.db, data)
@@ -95,10 +103,13 @@ func (g *git) Delete(c context.Context, r *DeleteGitRequest) (*DeleteGitResponse
 type GetGitRequest struct {
 }
 type GetGitResponse struct {
-	ID        string `json:"id"`
-	Host      string `json:"host"`
-	Token     string `json:"token"`
-	UpdatedAt int64  `json:"updatedAt"`
+	ID                string `json:"id"`
+	Host              string `json:"host"`
+	Token             string `json:"token"`
+	UpdatedAt         int64  `json:"updatedAt"`
+	SSH               string `json:"ssh"`
+	KnownHosts        string `json:"knownHosts"`
+	KeyScanKnownHosts string `json:"keyScanKnownHosts"`
 }
 
 func (g *git) Get(c context.Context, r *GetGitRequest) (*GetGitResponse, error) {
@@ -107,10 +118,13 @@ func (g *git) Get(c context.Context, r *GetGitRequest) (*GetGitResponse, error) 
 		return nil, nil
 	}
 	res := &GetGitResponse{
-		ID:        data.ID,
-		Host:      data.Host,
-		Token:     data.Token,
-		UpdatedAt: data.UpdatedAt,
+		ID:                data.ID,
+		Host:              data.Host,
+		Token:             data.Token,
+		UpdatedAt:         data.UpdatedAt,
+		SSH:               data.SSH,
+		KnownHosts:        data.KnownHosts,
+		KeyScanKnownHosts: data.KeyScanKnownHosts,
 	}
 	return res, nil
 

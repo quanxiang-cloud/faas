@@ -27,7 +27,7 @@ import (
 // Client Client
 type Client interface {
 	CreateGitToken(ctx context.Context, host, token string) error
-	CreateGitSSH(ctx context.Context, host, ssh string) error
+	CreateGitSSH(ctx context.Context, host, keyScanHost, ssh string) error
 	CreateDocker(ctx context.Context, host, username, secret string) error
 	Build(ctx context.Context, data *Function) error
 	DelFunction(ctx context.Context, data *DelFunction) error
@@ -93,7 +93,7 @@ func (c *client) CreateGitToken(ctx context.Context, host, token string) error {
 }
 
 // CreateGitSSH CreateGitSSH
-func (c *client) CreateGitSSH(ctx context.Context, host, ssh string) error {
+func (c *client) CreateGitSSH(ctx context.Context, host, keyScanHost, ssh string) error {
 	secret := c.client.CoreV1().Secrets(c.k8sNamespace)
 	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
 	if tenantID == "" || tenantID == TenantUnexpectedType {
@@ -101,7 +101,7 @@ func (c *client) CreateGitSSH(ctx context.Context, host, ssh string) error {
 	}
 	data := make(map[string][]byte)
 	// ssh-keyscan github.com | base64
-	data["known_hosts"] = []byte(host)
+	data["known_hosts"] = []byte(keyScanHost)
 	data["ssh-privatekey"] = []byte(ssh)
 
 	tekton := make(map[string]string)
