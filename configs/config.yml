@@ -33,7 +33,9 @@ mysql:
   log: true
 
 docker:
-  namespace: faas
+  builder: builder
+  serving: serving
+
 
 
 # ---------- redis ----------
@@ -59,82 +61,78 @@ graph:
     - build-trusted
     - push
   steps:
-    -
-      - start
-    -
-      - clone
-    -
-      - prepare
+    - - start
+    - - clone
+    - - prepare
       - create
-    -
-      - push
+    - - push
 
 build-images:
   go1.16: qxcr.xyz/faas/build-go:v1alpha1
 
-templates: 
-- full_name: handle.go
-  branch: master
-  commit: init repo
-  content: |
-    package handle
-
-    import (
-      "fmt"
-      "net/http"
-
-      "github.com/quanxiang-cloud/faas-lowcode-interface/lowcode"
-    )
-
-    type Request struct {
-      Foo string
-    }
-
-    type Response struct {
-      Bar string
-    }
-
-    // Handler function as a server handler
-    // @tags handler
-    // @Summary TODO: write your function name
-    // @Description handler description
-    // @Produce json
-    // @Param request body Request true "request"
-    // @Success 200 {object} Response
-    // @Router / [post]
-    func Handle(w http.ResponseWriter, r *http.Request) {
-      ctx := r.Context()
-      _, ok := ctx.Value(lowcode.LOWCODE).(lowcode.Lowcode)
-      if !ok {
-        return
+templates:
+  - full_name: handle.go
+    branch: master
+    commit: init repo
+    content: |
+      package handle
+      
+      import (
+        "fmt"
+        "net/http"
+      
+        "github.com/quanxiang-cloud/faas-lowcode-interface/lowcode"
+      )
+      
+      type Request struct {
+        Foo string
+      }
+      
+      type Response struct {
+        Bar string
+      }
+      
+      // Handler function as a server handler
+      // @tags handler
+      // @Summary TODO: write your function name
+      // @Description handler description
+      // @Produce json
+      // @Param request body Request true "request"
+      // @Success 200 {object} Response
+      // @Router / [post]
+      func Handle(w http.ResponseWriter, r *http.Request) {
+        ctx := r.Context()
+        _, ok := ctx.Value(lowcode.LOWCODE).(lowcode.Lowcode)
+        if !ok {
+          return
+        }
+      
+        // code there
+        w.Write([]byte("hello faas!"))
       }
 
-      // code there
-      w.Write([]byte("hello faas!"))
-    }
+  - full_name: go.mod
+    branch: master
+    commit: init repo
+    content: |
+      module quanxiang.lowcode/faas
+      
+      go 1.16
+      
+      require github.com/quanxiang-cloud/faas-lowcode-interface v0.0.0-20220505034554-fae42a4892ad
 
-- full_name: go.mod
-  branch: master
-  commit: init repo
-  content: |
-    module quanxiang.lowcode/faas
+  - full_name: go.sum
+    branch: master
+    commit: init repo
+    content: |
+      github.com/quanxiang-cloud/faas-lowcode-interface v0.0.0-20220505034554-fae42a4892ad h1:ynmSpZkZf8oGV6EhEXfiQY5Wy9lrTJxBw/g6WH8KlZw=
+      github.com/quanxiang-cloud/faas-lowcode-interface v0.0.0-20220505034554-fae42a4892ad/go.mod h1:rwhMXhcV96F1l+frwbgqazzepMTwRC1f0HaFEPNHscQ=
 
-    go 1.16
-
-    require github.com/quanxiang-cloud/faas-lowcode-interface v0.0.0-20220505034554-fae42a4892ad
-
-- full_name: go.sum
-  branch: master
-  commit: init repo
-  content: |
-    github.com/quanxiang-cloud/faas-lowcode-interface v0.0.0-20220505034554-fae42a4892ad h1:ynmSpZkZf8oGV6EhEXfiQY5Wy9lrTJxBw/g6WH8KlZw=
-    github.com/quanxiang-cloud/faas-lowcode-interface v0.0.0-20220505034554-fae42a4892ad/go.mod h1:rwhMXhcV96F1l+frwbgqazzepMTwRC1f0HaFEPNHscQ=
-
-- full_name: info.faas
-  branch: master
-  commit: init repo
-  content: |
-    projectName: demo
-    language: go
-    version: 1.16
+  - full_name: info.faas
+    branch: master
+    commit: init repo
+    content: |
+      projectName: demo
+      language: go
+      version: 1.16
 

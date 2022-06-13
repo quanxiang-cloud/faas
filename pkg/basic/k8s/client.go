@@ -39,32 +39,34 @@ type Client interface {
 }
 
 type client struct {
-	client       *kubernetes.Clientset
-	tekton       *tektonClient.Clientset
-	ofn          versioned.Interface
-	serving      serving.ServiceInterface
-	k8sNamespace string
-	buildImages  map[string]string
+	client              *kubernetes.Clientset
+	tekton              *tektonClient.Clientset
+	ofn                 versioned.Interface
+	serving             serving.ServiceInterface
+	k8sBuilderNamespace string
+	k8sServingNamespace string
+	buildImages         map[string]string
 }
 
 // NewClient NewClient
-func NewClient(config *config.Config, namespace string) Client {
+func NewClient(config *config.Config) Client {
 	ctrlConfig := ctrl.GetConfigOrDie()
 	clientset := kubernetes.NewForConfigOrDie(ctrlConfig)
 	ofn := versioned.NewForConfigOrDie(ctrlConfig)
 
 	return &client{
-		client:       clientset,
-		k8sNamespace: namespace,
-		ofn:          ofn,
-		serving:      serving.NewForConfigOrDie(ctrlConfig).Services(namespace),
-		tekton:       tektonClient.NewForConfigOrDie(ctrlConfig),
-		buildImages:  config.BuildImages,
+		client:              clientset,
+		k8sBuilderNamespace: config.Docker.BuilderNameSpace,
+		k8sServingNamespace: config.Docker.ServingNameSpace,
+		ofn:                 ofn,
+		serving:             serving.NewForConfigOrDie(ctrlConfig).Services(config.Docker.ServingNameSpace),
+		tekton:              tektonClient.NewForConfigOrDie(ctrlConfig),
+		buildImages:         config.BuildImages,
 	}
 }
 
 func (c *client) CreateGitToken(ctx context.Context, host, token string) error {
-	secret := c.client.CoreV1().Secrets(c.k8sNamespace)
+	secret := c.client.CoreV1().Secrets(c.k8sBuilderNamespace)
 	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
 	if tenantID == "" || tenantID == TenantUnexpectedType {
 		tenantID = TenantDefault
@@ -79,7 +81,7 @@ func (c *client) CreateGitToken(ctx context.Context, host, token string) error {
 		Type: v1.SecretTypeOpaque,
 		ObjectMeta: ctrl.ObjectMeta{
 			Name:        strutil.GenName(tenantID, SecretGitSuffix),
-			Namespace:   c.k8sNamespace,
+			Namespace:   c.k8sBuilderNamespace,
 			Annotations: tekton,
 		},
 		Data: data,
@@ -94,7 +96,7 @@ func (c *client) CreateGitToken(ctx context.Context, host, token string) error {
 
 // CreateGitSSH CreateGitSSH
 func (c *client) CreateGitSSH(ctx context.Context, host, keyScanHost, ssh string) error {
-	secret := c.client.CoreV1().Secrets(c.k8sNamespace)
+	secret := c.client.CoreV1().Secrets(c.k8sBuilderNamespace)
 	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
 	if tenantID == "" || tenantID == TenantUnexpectedType {
 		tenantID = TenantDefault
@@ -111,7 +113,7 @@ func (c *client) CreateGitSSH(ctx context.Context, host, keyScanHost, ssh string
 		Type: v1.SecretTypeSSHAuth,
 		ObjectMeta: ctrl.ObjectMeta{
 			Name:        strutil.GenName(tenantID, SecretGitSuffix),
-			Namespace:   c.k8sNamespace,
+			Namespace:   c.k8sBuilderNamespace,
 			Annotations: tekton,
 		},
 		Data: data,
@@ -125,7 +127,8 @@ func (c *client) CreateGitSSH(ctx context.Context, host, keyScanHost, ssh string
 }
 
 func (c *client) CreateDocker(ctx context.Context, host, username, secret string) error {
-	sc := c.client.CoreV1().Secrets(c.k8sNamespace)
+	sc1 := c.client.CoreV1().Secrets(c.k8sBuilderNamespace)
+	sc2 := c.client.CoreV1().Secrets(c.k8sServingNamespace)
 	_, tenantID := ginheader.GetTenantID(ctx).Wreck()
 	if tenantID == "" || tenantID == TenantUnexpectedType {
 		tenantID = TenantDefault
@@ -159,12 +162,17 @@ func (c *client) CreateDocker(ctx context.Context, host, username, secret string
 		Type: v1.SecretTypeDockerConfigJson,
 		ObjectMeta: ctrl.ObjectMeta{
 			Name:      strutil.GenName(tenantID, SecretDockerSuffix),
-			Namespace: c.k8sNamespace,
+			Namespace: c.k8sBuilderNamespace,
 		},
 		Data: data,
 	}
 	options := metav1.CreateOptions{}
-	_, err = sc.Create(ctx, s, options)
+	_, err = sc1.Create(ctx, s, options)
+	if err != nil {
+		return err
+	}
+	s.ObjectMeta.Namespace = c.k8sServingNamespace
+	_, err = sc2.Create(ctx, s, options)
 	if err != nil {
 		return err
 	}
@@ -172,7 +180,7 @@ func (c *client) CreateDocker(ctx context.Context, host, username, secret string
 }
 
 func (c *client) Build(ctx context.Context, data *Function) error {
-	fn := c.ofn.CoreV1beta1().Functions(c.k8sNamespace)
+	fn := c.ofn.CoreV1beta1().Functions(c.k8sBuilderNamespace)
 	function := &v1beta1.Function{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: strutil.GenName(data.GroupName, data.Project, data.Version),
@@ -219,7 +227,7 @@ type DelFunction struct {
 }
 
 func (c *client) DelFunction(ctx context.Context, data *DelFunction) error {
-	fn := c.ofn.CoreV1beta1().Functions(c.k8sNamespace)
+	fn := c.ofn.CoreV1beta1().Functions(c.k8sBuilderNamespace)
 	return fn.Delete(ctx, data.Name, metav1.DeleteOptions{})
 }
 
@@ -227,7 +235,7 @@ func (c *client) CreateServing(ctx context.Context, fn *Function) error {
 	ksvc := &ksvc.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      strutil.GenName(fn.Version, fn.Project, fn.GroupName),
-			Namespace: c.k8sNamespace,
+			Namespace: c.k8sServingNamespace,
 		},
 		Spec: ksvc.ServiceSpec{
 			ConfigurationSpec: ksvc.ConfigurationSpec{
@@ -288,7 +296,7 @@ func genServingEnv(c *client, fn *Function) []v1.EnvVar {
 		},
 		v1.EnvVar{
 			Name:  "POD_NAMESPACE",
-			Value: c.k8sNamespace,
+			Value: c.k8sServingNamespace,
 		},
 		v1.EnvVar{
 			Name:  "LOWCODE_NAMESPACE",
@@ -343,10 +351,10 @@ func (c *client) RegistAPI(ctx context.Context, fn *Function, appId string) erro
 			},
 		},
 	}
-	_, err := c.tekton.TektonV1beta1().PipelineRuns(c.k8sNamespace).Create(ctx, pipeRun, metav1.CreateOptions{})
+	_, err := c.tekton.TektonV1beta1().PipelineRuns(c.k8sBuilderNamespace).Create(ctx, pipeRun, metav1.CreateOptions{})
 	return err
 }
 
 func (c *client) DeleteReigstRun(ctx context.Context, name string) error {
-	return c.tekton.TektonV1beta1().PipelineRuns(c.k8sNamespace).Delete(ctx, name, metav1.DeleteOptions{})
+	return c.tekton.TektonV1beta1().PipelineRuns(c.k8sBuilderNamespace).Delete(ctx, name, metav1.DeleteOptions{})
 }
