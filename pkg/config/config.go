@@ -36,7 +36,8 @@ type Config struct {
 
 // Docker docker
 type Docker struct {
-	NameSpace string `yaml:"namespace"`
+	BuilderNameSpace string `yaml:"builder"`
+	ServingNameSpace string `yaml:"serving"`
 }
 
 type Template struct {
