@@ -42,6 +42,10 @@ spec:
       description: Set the `http.sslVerify` global git config. Setting this to `false` is not advised unless you are sure that you trust your git remote.
       type: string
       default: "true"
+    - name: crtFileName
+      description: file name of mounted crt using ssl-ca-directory workspace. default value is ca-bundle.crt.
+      type: string
+      default: "ca-bundle.crt"
     - name: subdirectory
       description: Subdirectory inside the `output` Workspace to clone the repo into.
       type: string
@@ -73,13 +77,18 @@ spec:
     - name: gitInitImage
       description: The image providing the git-init binary that this Task runs.
       type: string
-      default: "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.21.0"
+      default: "gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init:v0.29.0"
     - name: userHome
       description: |
         Absolute path to the user's home directory. Set this explicitly if you are running the image as a non-root user or have overridden
         the gitInitImage param with an image containing custom user configuration.
       type: string
       default: "/tekton/home"
+  results:
+    - name: commit
+      description: The precise commit SHA that was fetched by this Task.
+    - name: url
+      description: The precise URL that was fetched by this Task.
   steps:
     - name: clone
       image: "$(params.gitInitImage)"
@@ -98,6 +107,8 @@ spec:
         value: $(params.depth)
       - name: PARAM_SSL_VERIFY
         value: $(params.sslVerify)
+      - name: PARAM_CRT_FILENAME
+        value: $(params.crtFileName)
       - name: PARAM_SUBDIRECTORY
         value: $(params.subdirectory)
       - name: PARAM_DELETE_EXISTING
@@ -124,8 +135,10 @@ spec:
         value: $(workspaces.basic-auth.bound)
       - name: WORKSPACE_BASIC_AUTH_DIRECTORY_PATH
         value: $(workspaces.basic-auth.path)
-      - name: SERVICE_ACCOUNT
-        value: "true"
+      - name: WORKSPACE_SSL_CA_DIRECTORY_BOUND
+        value: $(workspaces.ssl-ca-directory.bound)
+      - name: WORKSPACE_SSL_CA_DIRECTORY_PATH
+        value: $(workspaces.ssl-ca-directory.path)
       script: |
         #!/usr/bin/env sh
         set -eu
@@ -140,16 +153,15 @@ spec:
         fi
         if [ "${WORKSPACE_SSH_DIRECTORY_BOUND}" = "true" ] ; then
           cp -R "${WORKSPACE_SSH_DIRECTORY_PATH}" "${PARAM_USER_HOME}"/.ssh
-          mv "${PARAM_USER_HOME}"/.ssh/ssh-privatekey  "${PARAM_USER_HOME}"/.ssh/id_rsa
           chmod 700 "${PARAM_USER_HOME}"/.ssh
           chmod -R 400 "${PARAM_USER_HOME}"/.ssh/*
-        fi 
-
-        # FIXME 
-        if [ "${SERVICE_ACCOUNT}" == "true" ] ; then 
-          rm -rf "${PARAM_USER_HOME}"/.ssh/config
         fi
-
+        if [ "${WORKSPACE_SSL_CA_DIRECTORY_BOUND}" = "true" ] ; then
+           export GIT_SSL_CAPATH="${WORKSPACE_SSL_CA_DIRECTORY_PATH}"
+           if [ "${PARAM_CRT_FILENAME}" != "" ] ; then
+              export GIT_SSL_CAINFO="${WORKSPACE_SSL_CA_DIRECTORY_PATH}/${PARAM_CRT_FILENAME}"
+           fi
+        fi
         CHECKOUT_DIR="${WORKSPACE_OUTPUT_PATH}/${PARAM_SUBDIRECTORY}"
         cleandir() {
           # Delete any existing contents of the repo directory if it exists.
@@ -186,6 +198,8 @@ spec:
         if [ "${EXIT_CODE}" != 0 ] ; then
           exit "${EXIT_CODE}"
         fi
+        printf "%s" "${RESULT_SHA}" > "$(results.commit.path)"
+        printf "%s" "${PARAM_URL}" > "$(results.url.path)"
 
     - name: register-swagger
       image: $(params.SWAGGER_IMAGE)
